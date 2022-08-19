@@ -70,7 +70,7 @@ In this script, students will
 MATLAB&reg;
 
 ## License ##
-The license for this module is available in the [LICENSE.TXT](license.txt) file in this GitHub repository.
+The license for this module is available in the [License.md](LICENSE.md) file in this GitHub repository.
 
 ## Support ##
 Have any questions or feedback? Are you an instructor who would like solutions? Contact the <a href="mailto:onlineteaching@mathworks.com">MathWorks online teaching team.</a>
