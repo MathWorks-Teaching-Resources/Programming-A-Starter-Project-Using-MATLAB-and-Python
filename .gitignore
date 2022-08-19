@@ -1,0 +1,9 @@
+# List of untracked files to ignore
+
+*.asv
+*.zip
+*.pyc
+*.pyc
+*.vs
+*TestOutput
+MATLAB-Live-Task-for-Python
