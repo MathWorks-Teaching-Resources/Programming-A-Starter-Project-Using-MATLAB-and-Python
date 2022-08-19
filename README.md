@@ -1,4 +1,5 @@
-# Programming: A Starter Project Using MATLAB with Python [![View <File Exchange Title> on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/XXXX)
+# Programming: A Starter Project Using MATLAB with Python 
+[![View Programming-A-Starter-Project-Using-MATLAB-and-Python on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/116490-programming-a-starter-project-using-matlab-and-python)
 **Curriculum Module**  
 _Created with R2022a. Compatible with R2022a and later releases._ 
 
@@ -67,7 +68,7 @@ In this script, students will
 - use hidden code interactions in live scripts to design a streamlined user experience.
 
 ## Products ##
-MATLAB&reg;
+MATLAB&reg;, Symbolic Math Toolbox&trade;
 
 ## License ##
 The license for this module is available in the [License.md](LICENSE.md) file in this GitHub repository.
