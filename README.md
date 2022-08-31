@@ -1,5 +1,7 @@
 # Programming: A Starter Project Using MATLAB with Python 
 [![View Programming-A-Starter-Project-Using-MATLAB-and-Python on File Exchange](https://www.mathworks.com/matlabcentral/images/matlab-file-exchange.svg)](https://www.mathworks.com/matlabcentral/fileexchange/116490-programming-a-starter-project-using-matlab-and-python)
+[Open in MATLAB Online](https://matlab.mathworks.com/open/github/v1?repo=MathWorks-Teaching-Resources/Programming-A-Starter-Project-Using-MATLAB-and-Python&project=MATLABwithPython.prj)
+
 **Curriculum Module**  
 _Created with R2022a. Compatible with R2022a and later releases._ 
 
@@ -32,7 +34,7 @@ These ideas are all presented with interactive examples in
 ## Details ##
 
 ## ##
-**UsingMATLABwithPython.mlx**
+**UsingMATLABwithPython.mlx** [Open in MATLAB Online](https://matlab.mathworks.com/open/github/v1?repo=MathWorks-Teaching-Resources/Programming-A-Starter-Project-Using-MATLAB-and-Python&project=MATLABwithPython.prj&file=UsingMATLABwithPython.mlx)
 This script introduces the Run Python Code Live Task, as well as walking through checking that an appropriate version 
 of Python is installed and visible to MATLAB.
 
@@ -45,7 +47,7 @@ In this script, students will...
 - try running Python commands and a Python script from MATLAB.
 
 ## ##
-**CheckingTheWeather.mlx**
+**CheckingTheWeather.mlx** [Open in MATLAB Online](https://matlab.mathworks.com/open/github/v1?repo=MathWorks-Teaching-Resources/Programming-A-Starter-Project-Using-MATLAB-and-Python&project=MATLABwithPython.prj&file=CheckingTheWeather.mlx)
 This script introduces the OpenWeather API, walking through setting up an account to get an API key, using an existing python script to access the API, and then investigation of the data that is returned.
 
 <img src="https://user-images.githubusercontent.com/88841524/175094710-f3d6f2d1-ccd5-4068-99f4-eaec9cc1b8b8.png" width="500">
@@ -58,7 +60,7 @@ In this script, students will...
 unit conversions, and data visualization options.
 
 ## ##
-**MyWeatherDashboard.mlx**
+**SampleWeatherDashboard.mlx** [Open in MATLAB Online](https://matlab.mathworks.com/open/github/v1?repo=MathWorks-Teaching-Resources/Programming-A-Starter-Project-Using-MATLAB-and-Python&project=MATLABwithPython.prj&file=SampleWeatherDashboard.mlx)
 This script presents an example of a cleaned-up final product from following the directions in `CheckingTheWeather.mlx`. It uses a live script with Code Hidden to offer a pleasant user experience.
 
 <img src="https://user-images.githubusercontent.com/88841524/175093931-32c092f4-5714-4642-ab25-442fbb0116d0.gif" width="500">
