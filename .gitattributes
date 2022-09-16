@@ -1,6 +1,6 @@
 *.fig binary
 *.mat binary
-*.mdl binary diff merge=mlAutoMerge
+*.mdl binary
 *.mdlp binary
 *.mexa64 binary
 *.mexw64 binary
@@ -12,8 +12,8 @@
 *.p binary
 *.sfx binary
 *.sldd binary
-*.slreqx binary merge=mlAutoMerge
-*.slmx binary merge=mlAutoMerge
+*.slreqx binary
+*.slmx binary
 *.sltx binary
 *.slxc binary
 *.slx binary merge=mlAutoMerge
