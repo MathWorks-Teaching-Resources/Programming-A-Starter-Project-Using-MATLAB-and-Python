@@ -1,6 +1,6 @@
 *.fig binary
 *.mat binary
-*.mdl binary
+*.mdl binary diff merge=mlAutoMerge
 *.mdlp binary
 *.mexa64 binary
 *.mexw64 binary
@@ -8,12 +8,12 @@
 *.mlapp binary
 *.mldatx binary
 *.mlproj binary
-*.mlx binary
+*.mlx binary merge=mlAutoMerge
 *.p binary
 *.sfx binary
 *.sldd binary
-*.slreqx binary
-*.slmx binary
+*.slreqx binary merge=mlAutoMerge
+*.slmx binary merge=mlAutoMerge
 *.sltx binary
 *.slxc binary
 *.slx binary merge=mlAutoMerge
@@ -26,3 +26,7 @@
 *.pdf binary
 *.png binary
 *.xlsx binary
+
+# Ignore HTML
+
+*.html linguist-detectable=false
