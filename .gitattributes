@@ -8,7 +8,7 @@
 *.mlapp binary
 *.mldatx binary
 *.mlproj binary
-*.mlx binary merge=mlAutoMerge
+*.mlx binary merge=mlAutoMerge linguist-language=MATLAB
 *.p binary
 *.sfx binary
 *.sldd binary
