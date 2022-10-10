@@ -3,7 +3,8 @@
 *.asv
 *.zip
 *.pyc
-*.pyc
+*/*.pyc
 *.vs
 *TestOutput
 MATLAB-Live-Task-for-Python
+__pycache__
