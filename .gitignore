@@ -1,5 +1,6 @@
 # List of untracked files to ignore
 
+myAPIkey.txt
 *.asv
 *.zip
 *.pyc
