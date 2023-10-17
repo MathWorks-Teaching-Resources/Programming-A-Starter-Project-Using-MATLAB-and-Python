@@ -81,5 +81,8 @@ The license for this module is available in the [License.md](LICENSE.md) file in
 ## Support ##
 Have any questions or feedback? Are you an instructor who would like solutions? Contact the <a href="mailto:onlineteaching@mathworks.com">MathWorks online teaching team.</a>
 
+## Acknowledgements ##
+Many thanks to Blake Naccarato on his suggestions for improvement.
+
 # #
 _Copyright 2022 The MathWorks, Inc._
