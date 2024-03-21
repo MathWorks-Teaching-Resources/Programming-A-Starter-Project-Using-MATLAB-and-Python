@@ -47,7 +47,7 @@ jobs:
       - name: Run SmokeTests
         uses: matlab-actions/run-command@v2
         with:
-          command: openProject(pwd); RunAllTests; 
+          command: openProject(pwd); RunAllTests; disp("FINISHED!!")
 
       # Upload the test results as artifact
       - name: Upload TestResults
