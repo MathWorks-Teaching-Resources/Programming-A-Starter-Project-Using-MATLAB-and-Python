@@ -41,6 +41,7 @@ classdef SmokeTests < matlab.unittest.TestCase
                 case "CheckingTheWeather.mlx"
                     txt = readlines("Response.json");
                     pycode = ["import checkcurrentweather"
+                        "import json"
                         ""
                         "json_data = json.loads(txt)"
                         "currentWeather = checkcurrentweather.parse_current_json(json_data)"

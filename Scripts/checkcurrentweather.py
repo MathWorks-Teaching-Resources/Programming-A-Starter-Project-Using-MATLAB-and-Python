@@ -15,7 +15,7 @@ This API is licensed under CC BY-SA 4.0, as documented here:
 https://creativecommons.org/licenses/by-sa/4.0/
 '''
 
-# checkweather.py
+# checkcurrentweather.py
 import datetime
 import json  
 import urllib.request
