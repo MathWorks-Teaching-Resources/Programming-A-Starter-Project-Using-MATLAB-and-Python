@@ -97,6 +97,10 @@ classdef SmokeTests < matlab.unittest.TestCase
             close all
         end
 
+        function RunMyFile(~,Filename)
+            run(Filename);
+        end
+
         function SimpleSmokeTest(testCase,Filename)
 
             % Run the Smoke test
@@ -104,7 +108,7 @@ classdef SmokeTests < matlab.unittest.TestCase
             cd(RootFolder)
             disp(">> Running " + Filename);
             try
-                run(fullfile("Scripts",Filename));
+                RunMyFile(testCase,Filename)
             catch ME
                 testCase.verifyTrue(false,ME.message);
             end
