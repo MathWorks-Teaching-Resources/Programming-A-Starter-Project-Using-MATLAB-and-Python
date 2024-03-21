@@ -5,7 +5,7 @@
 *.mexa64 binary
 *.mexw64 binary
 *.mexmaci64 binary
-*.mlapp binary
+*.mlapp binary linguist-language=MATLAB
 *.mldatx binary
 *.mlproj binary
 *.mlx binary merge=mlAutoMerge linguist-language=MATLAB
@@ -16,7 +16,7 @@
 *.slmx binary merge=mlAutoMerge
 *.sltx binary
 *.slxc binary
-*.slx binary merge=mlAutoMerge
+*.slx binary merge=mlAutoMerge linguist-language=Simulink
 *.slxp binary
 
 ## Other common binary file types

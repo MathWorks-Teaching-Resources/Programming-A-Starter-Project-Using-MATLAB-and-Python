@@ -1,17 +1,11 @@
 # List of untracked files to ignore
-
-*.zip
-*.pyc
-*/*.pyc
 *.vs
-*TestOutput
-MATLAB-Live-Task-for-Python
-__pycache__
 
 # Prevent accidentally committing your API key 
 myAPIkey.txt
 
-# List of untracked files to ignore
+# Live Task Repository
+MATLAB-Live-Task-for-Python
 
 # Autosave files
 *.asv
@@ -53,9 +47,18 @@ codegen/
 *.elf
 *.hex
 *.bin
+__pycache__
+*.pyc
+*/*.pyc
 
 # Cache files
 *.slxc
 
 # Project settings
 Utilities/ProjectSettings.mat
+
+# Test results
+SoftwareTests/TestResults_*
+
+# GitLab page folder
+public/
