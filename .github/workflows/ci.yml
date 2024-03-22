@@ -13,7 +13,7 @@ jobs:
     strategy: 
       fail-fast: false
       matrix:
-        MATLABVersion: [R2022a,R2022b,R2023a,R2023b,R2024a]
+        MATLABVersion: [R2023b]
     runs-on: ubuntu-latest
     steps:
       # Checks-out your repository
@@ -42,6 +42,8 @@ jobs:
           # Econometrics_Toolbox
           # Deep_Learning_Toolbox
 
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
 
       # Run all the tests
       - name: Run SmokeTests
