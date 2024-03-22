@@ -27,6 +27,9 @@ def get_weather(lat,lon,apikey,**kwargs):
     lat = 42.2775 N, lon = 71.3468 W is Natick, MA, US
     get_current_weather('42.2775','-71.3468',key,units='metric')'''
     
+    # Initialize json_data
+    json_data = {'Feedback': 'nothing'}
+
     # Set a default of imperial units
     info = {'units':'imperial'}     
     for key, value in kwargs.items():
@@ -44,6 +47,8 @@ def get_weather(lat,lon,apikey,**kwargs):
 
 def parse_current_json(json_data):
     '''parse and extract json data from the current weather data''' 
+    # Initialize weather_info
+    weather_info = {'Feedback': 'nothing'}
 
     try:
         # select data of interest from dictionary
@@ -73,6 +78,8 @@ def parse_forecast(json_data):
 
     import array
     
+    weather_info = {'Feedback': 'nothing'}
+
     try:
         timezone = json_data['timezone']
         data = json_data['hourly']
