@@ -85,6 +85,7 @@ classdef SmokeTests < matlab.unittest.TestCase
                 testCase.verifyTrue(false,ME.message);
             end
 
+            try
             % Log the opened figures to the test reports
             Figures = findall(groot,'Type','figure');
             Figures = flipud(Figures);
@@ -93,6 +94,9 @@ classdef SmokeTests < matlab.unittest.TestCase
                     FigDiag = matlab.unittest.diagnostics.FigureDiagnostic(Figures(f));
                     log(testCase,1,FigDiag);
                 end
+            end
+            catch ME
+                disp("Failed to capture images")
             end
             close all
         end
