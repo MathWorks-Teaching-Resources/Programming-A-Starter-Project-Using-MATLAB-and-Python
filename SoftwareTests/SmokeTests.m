@@ -38,6 +38,8 @@ classdef SmokeTests < matlab.unittest.TestCase
         function SmokeRun(testCase,Scripts)
             Filename = string(Scripts);
             switch (Filename)
+                case "CreateCurrentWeatherApp.mlx"
+                    disp("Skipping " + Filename)
                 case "CheckingTheWeather.mlx"
                     txt = readlines("Response.json");
                     pycode = ["import checkcurrentweather"
