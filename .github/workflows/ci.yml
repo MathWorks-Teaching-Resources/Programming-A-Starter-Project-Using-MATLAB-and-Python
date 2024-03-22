@@ -42,14 +42,11 @@ jobs:
           # Econometrics_Toolbox
           # Deep_Learning_Toolbox
 
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
-
       # Run all the tests
       - name: Run SmokeTests
         uses: matlab-actions/run-command@v2
         with:
-          command: openProject(pwd); RunAllTests; disp("FINISHED!!")
+          command: openProject(pwd); RunAllTests; 
 
       # Upload the test results as artifact
       - name: Upload TestResults
