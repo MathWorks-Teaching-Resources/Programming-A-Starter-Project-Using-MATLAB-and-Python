@@ -4,6 +4,11 @@ classdef FunctionTests < matlab.unittest.TestCase
 
     methods(Test)    
 
+        function IsKnownPythonVersion(testCase)
+            Known = CheckPythonVersion;
+            verifyTrue(testCase,Known)
+        end
+
     end % methods
 
 end % classdef
