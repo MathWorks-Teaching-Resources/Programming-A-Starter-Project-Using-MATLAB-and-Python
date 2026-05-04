@@ -6,9 +6,6 @@
 *.autosave
 *.slx.r*
 *.mdl.r*
-__pycache__
-*.pyc
-*/*.pyc
 
 # MATLAB Drive
 *.MATLABDriveTag
@@ -50,8 +47,10 @@ codegen/
 # Project settings
 Utilities/ProjectSettings.mat
 
-# GitLab page folder
+# Testing and CI related artifact
 public/
+.buildtool/
+ci_utilities/
 
 # Prevent accidentally committing your API key
 myAPIkey.txt
@@ -59,3 +58,5 @@ myAPIkey.txt
 # Live Task Repository
 MATLAB-Live-Task-for-Python
 
+# Ignore Python cache
+Scripts/__pycache__/
