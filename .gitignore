@@ -60,3 +60,4 @@ MATLAB-Live-Task-for-Python
 
 # Ignore Python cache
 Scripts/__pycache__/
+InstructorResources/Solutions/__pycache__/
