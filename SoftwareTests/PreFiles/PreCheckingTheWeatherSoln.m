@@ -3,11 +3,11 @@
 KnownIssuesID = "";
 % ---- Pre-run commands -----
  
-% try 
-% copyfile(fullfile(currentProject().RootFolder,"InternalFiles","Solutions","myAPIkey.txt"),...
-%     fullfile(currentProject().RootFolder,"Scripts","myAPIkey.txt"))
-% catch
-%     disp("No API key found.")
+try 
+copyfile(fullfile(currentProject().RootFolder,"InternalFiles","Solutions","myAPIkey.txt"),...
+    fullfile(currentProject().RootFolder,"Scripts","myAPIkey.txt"))
+catch
+    disp("No API key found.")
 %     % copyfile("Response.json",fullfile(currentProject().RootFolder,"InstructorResources","Solutions","Response.json"))
 %     % pycode = ["import checkcurrentweather"
 %     % "import json"
@@ -16,8 +16,8 @@ KnownIssuesID = "";
 %     % "currentWeather = checkcurrentweather.parse_current_json(json_data)"
 %     % ];
 %     apikey = "TestString";
-%     % pyrun = @(txt,out,varargin)TestPyRun(pycode,out,varargin);
-% end
+    % pyrun = @(txt,out,varargin)TestPyRun(pycode,out,varargin);
+end
 % 
 % function out = TestPyRun(txt,in,varargin)
 % out = pyrun(txt,in);
