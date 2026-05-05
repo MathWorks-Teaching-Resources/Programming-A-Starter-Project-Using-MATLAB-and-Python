@@ -16,6 +16,7 @@ catch
 %     % "currentWeather = checkcurrentweather.parse_current_json(json_data)"
 %     % ];
 %     apikey = "TestString";
+    writelines("",fullfile(currentProject().RootFolder,"Scripts","myAPIkey.txt"))
     % pyrun = @(txt,out,varargin)TestPyRun(pycode,out,varargin);
 end
 % 
