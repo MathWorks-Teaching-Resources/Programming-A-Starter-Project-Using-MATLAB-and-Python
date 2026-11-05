@@ -1,4 +1,4 @@
-%  Pre-run script for CheckingTheWeather.mlx
+%  Pre-run script for CheckingTheWeather.m
 % ---- Known Issues     -----
 KnownIssuesID = "";
 % ---- Pre-run commands -----
@@ -15,3 +15,4 @@ pycode = ["import checkcurrentweather"
     ];
 [currentWeather] = pyrun(pycode, "currentWeather","txt",txt);
 cd(curpath)
+% <matlab:ShareFeedback Share your feedback>

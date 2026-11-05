@@ -1,0 +1,307 @@
+%[text] %[text:anchor:T_86717BEC] # Checking the Weather Using MATLAB and Python
+%[text] [⇦ Main Menu](file:MainMenu.m)
+%[text] There are benefits and challenges in bringing multiple programming languages together using Application Programming Interfaces (APIs). In this script, you have an existing Python module that contains functions for accessing the OpenWeather API and doing some initial cleaning of the data. To practice using existing code rather than rewriting the functionality into MATLAB, this script walks through using the existing `checkcurrentweather.py` code in the Run Python Code Live Task. The exploration and analysis of the data will happen in MATLAB. This toy example should demonstrate the possibilities for using code provided by others in the framework of code you write yourself. This can provide benefits for collaboration and time savings even when it may well be possible to [rewrite the code](https://www.mathworks.com/help/matlab/ref/webread.html) to use [fewer tools](https://www.mathworks.com/help/matlab/ref/jsondecode.html).
+%[text] **Getting started:** Follow the instructions in [Using Python with MATLAB](file:../../Scripts/UsingMATLABwithPython.m) to ensure that your system is configured to run compatible versions of MATLAB, Python, and the Run Python Code Live Task.
+%[text] ![Warning symbol](text:image:3056) **Warning:** This script was written in Python 3.8 and has been tested with Python 3.9-12. It will not run with Python 2.7.
+%[text:tableOfContents]{"heading":"Table of Contents"}
+%[text] %[text:anchor:H_84E9FAE7] ## Use Python to pull current information from the OpenWeather API
+%[text] %[text:anchor:H_058370DC] ### Create an OpenWeather account
+%[text] 1. Navigate to [https://home.openweathermap.org/users/sign\_up](https://home.openweathermap.org/users/sign_up) to create your account.
+%[text] 2. Once you have an account, visit [https://home.openweathermap.org/home](https://home.openweathermap.org/home) and select **API keys** from the menu \
+%[text]{"align":"center"} ![Screenshot of the OpenWeather menu showing that "API Keys" are the third entry from the left after "New Products" and "Services"](text:image:00e4)
+%[text]           3\. Save your API key in `HelperFunctions` as `myAPIkey.txt` by pasting it here:
+if ~exist("myAPIkey.txt","file") || false% Check this box to save a new API key %[control:checkbox:97db]{"position":[37,42]}
+    % Load your API key and save it in a file
+    apikey =""; %[control:editfield:84dd]{"position":[13,15]}
+    if apikey ~= ""
+        writelines(apikey,fullfile("FunctionLibrary","myAPIkey.txt"))
+    end
+elseif ~isempty(readlines("myAPIkey.txt",EmptyLineRule="skip"))
+    % If you already have an API key saved, load it from the file
+    apikey = readlines("myAPIkey.txt",EmptyLineRule="skip");
+    disp("The API key is: " + apikey)
+else
+    disp("You need to save an Openweather API key to use this script.")
+end
+%%
+%[text] Check that Python is configured properly:
+CheckPythonVersion(Flag="ProjectScript"); %[output:7e9c07a8]
+%%
+%[text]           5\. Choose a location by latitude and longitude, create a label for your location, and make a choice of the unit system. The [units available](https://openweathermap.org/current) from the OpenWeather API are "standard", "metric", or "imperial".
+lat = 42.2834;   % Natick, US
+lon = -71.3495;  % Natick, US
+location = "Natick, US";
+unitChoice = "imperial";
+% lat = 4.6097;    % Bogota, Colombia
+% lon = -74.0817;  % Bogota, Colombia
+% location = "Bogota, Colombia"
+% unitChoice = "metric";
+% lat = 12.9762;   % Bengaluru, India
+% lon = 77.6033;   % Bengaluru, India
+% location = "Bengaluru, Inda";
+% unitChoice = "metric";
+%[text] 
+%%
+%[text]         6\. Insert a Run Python Code Live Task here and configure it to run the Python code below:
+%[text] ```matlabCodeExample
+%[text] import checkcurrentweather
+%[text] 
+%[text] # Make sure that the Run Python Code Live Task recognizes that unitChoice is a variable
+%[text] pyUnits = unitChoice
+%[text] 
+%[text] json_data = checkcurrentweather.get_weather(lat,lon,apikey,units =  pyUnits)
+%[text] currentWeather = checkcurrentweather.parse_current_json(json_data)
+%[text] ```
+%[text] Note that this requires four input variables: `lat`, `lon`, `apikey`, and `unitChoice`. It also returns one output variable: `currentWeather`.
+% Open the Live Task Run Python Code here
+
+% % Python code input
+if ~isempty(readlines("myAPIkey.txt",EmptyLineRule="skip"))
+% % Using a real API key
+
+pycode = [...
+"import checkcurrentweather",...
+"",...
+"# Make sure that the Run Python Code Live Task recognizes that unitChoice is a variable",...
+"pyUnits = unitChoice",...
+"",...
+"json_data = checkcurrentweather.get_weather(lat,lon,apikey,units =  pyUnits)",...
+"currentWeather = checkcurrentweather.parse_current_json(json_data)"...
+];
+
+else
+% Or using test output
+pycode = ["import checkcurrentweather";
+    "import json";
+    "";
+    "json_data = json.load(open(""../../SoftwareTests/Response.json""))";
+    "currentWeather = checkcurrentweather.parse_current_json(json_data)";
+    ];
+apikey = "TestString";
+pyrun = @(txt,out,varargin)TestPyRun(pycode,out,varargin);
+end
+
+[currentWeather] = pyrun(pycode, [ "currentWeather" ], ... %[output:group:372ccba9] %[output:44d614c5]
+      "lat", lat, "lon", lon, "apikey", apikey, "unitChoice", unitChoice) %[output:group:372ccba9] %[output:44d614c5]
+
+% Clean up
+clear pycode;
+
+%%
+%[text] %[text:anchor:H_F931A789] ## Exploring the results of your API call
+%[text] %[text:anchor:H_5840FA12] ### Checking Data Types
+%[text] The return variable is a Python dictionary.
+class(currentWeather) %[output:9fb457fa]
+%[text] This means they are collections of key/value pairs:
+currentWeather %[output:73f6ba2f]
+%[text] You can check the list of keys:
+keys(currentWeather) %[output:05468d24]
+%[text] or even access values:
+currentWeather{"feels_like"} %[output:0e82ec8f]
+%%
+%[text] %[text:anchor:H_64B78D12] ### Converting Data Types
+%[text] To fully interface between languages, you should convert the Python dictionary into a MATLAB data type.
+%[text] ![](text:image:98df) **Try.** Use the `struct` command to create a MATLAB structure from the returned variable `currentWeather`. Name the new variable `curWeather`. Do not suppress the output.
+curWeather = struct(currentWeather) %[output:7477cd49]
+%[text] ![](text:image:8749) **Reflect**.
+%[text] 1. What happened to the keys and values from the Python dictionary? \
+%[text] There are still both MATLAB and Python data types inside `curWeather`. This happens because there is a conservative list of Python data types that can be automatically converted to equivalent MATLAB data types.
+%[text] ![](text:image:5db1) **Exercise 1.**
+%[text] 1. Identify two fields that contain MATLAB doubles.
+%[text] 2. Identify two fields that contain Python integers.
+%[text] 3. Identify two fields that contain Python strings. \
+%%
+%[text] **Solution:**
+%[text] Observe that this structure contains MATLAB doubles
+class(curWeather.temp_min) %[output:7b68c9b8]
+class(curWeather.wind_deg) %[output:10522706]
+%[text] as well as Python integers:
+class(curWeather.current_time) %[output:4e38b354]
+class(curWeather.timezone) %[output:647bd3c5]
+%[text] and Python strings:
+class(curWeather.local_time) %[output:6de68dc5]
+class(curWeather.city_name) %[output:848e4f0f]
+%%
+%[text] %[text:anchor:H_57DF0A75] ### Choosing Data Type Conversions
+%[text] As the programmer, you have additional information about what type of data is contained in each field. Use this information to choose appropriate MATLAB data types.
+%[text] Convert the `py.str` values to MATLAB strings using `string` and the `py.int` values to numeric MATLAB variables using `double.`
+curWeather.current_time = double(curWeather.current_time);
+
+curWeather.local_time = string(curWeather.local_time);
+%[text] Is a string the right data type for `curWeather.local_time`? Let's take a look:
+curWeather.local_time %[output:374d535b]
+%[text] This is actually a better fit as a `datetime` in MATLAB. Convert the data type again:
+curWeather.local_time = datetime(curWeather.local_time);
+curWeather.local_time %[output:82357326]
+%%
+%[text] We also don't know what is inside of the list in `curWeather.weather`, let's do a bit of exploring:
+curWeather.weather %[output:7ab69b6f]
+%%
+%[text] Which options make the most sense for a Python dictionary containing integers, strings, and alphanumeric codes? There is only one element, a dictionary, in this Python list, so that we can pull it out into a structure:
+weatherDescr = curWeather.weather{1};
+weather = struct(weatherDescr) %[output:1627160e]
+%[text] Okay, we can decide which of these values we are interested in. Do you want to explore the [`id` codes](https://openweathermap.org/weather-conditions#Weather-Condition-Codes-2)? Or do you want to see the verbal description of the weather? Do you want to use the [icons](https://openweathermap.org/weather-conditions#How-to-get-icon-URL) from OpenWeatherMap?
+%[text] Let's start by just looking at the verbal descriptions:
+weather.main = string(weather.main);
+weather.description = string(weather.description) %[output:51421d8c]
+%[text] Now we've got a verbal description of the weather for the day!
+%%
+%[text] ![](text:image:66c1) **Exercise 2.**
+%[text] Convert the remaining Python data types to MATLAB data types.
+%[text] **Solution:**
+curWeather.sunrise = double(curWeather.sunrise);
+curWeather.sunset = double(curWeather.sunset);
+curWeather.timezone = double(curWeather.timezone);
+curWeather.city_name = string(curWeather.city_name);
+%%
+%[text] ![](text:image:3a12) **Exercise 3.**
+%[text] Read the [API documentation](https://openweathermap.org/current) to discover how the time is stored, and then read the documentation for [`datetime`](<matlab: doc datetime>) to find the correct `dateType` to use with `"ConvertFrom"`. Convert `sunrise`, `sunset`, and `current_time` to datetime using the value in `curWeather.timezone` as appropriate.
+%[text] **Solution:**
+curWeather.sunrise = datetime(double(curWeather.sunrise+curWeather.timezone),"ConvertFrom","posixtime");
+curWeather.sunset = datetime(double(curWeather.sunset+curWeather.timezone),"ConvertFrom","posixtime");
+curWeather.current_time = datetime(double(curWeather.current_time+curWeather.timezone),"ConvertFrom","posixtime");
+%%
+%[text] %[text:anchor:H_64C525FE] #### Allow a user to choose the pressure units
+%[text] From the API, we know that the units of pressure are hectopascals, hPa. This is not a common unit for presenting atmospheric pressure. The code below converts the value into more common units such as millimeters of mercury, standard atmospheres, or bars.
+%[text] ![](text:image:4b77) **Try**.
+%[text] 1. Run this section and observe the results.
+%[text] 2. Change the value of `pUnit`to `"atm"` and run this section again.
+%[text] 3. Add a live control to set the `pUnit` using a dropdown menu. The options should be `mmHg`, `atm`, or `bar`. \
+% Set up a symbolic unit  %[text:anchor:M_90524011]
+u = symunit;
+% create a symbolic pressure variable with units
+curPressure = curWeather.pressure*u.hPa;
+% Choose a unit you want to use for displaying the results
+pUnit = "mmHg"; %[control:dropdown:145f]{"position":[9,15]}
+
+switch pUnit
+    case "mmHg"
+        curPressure = rewrite(curPressure,u.mmHg);
+    case "atm"
+        curPressure = rewrite(curPressure,u.atm);
+    case "bar"
+        curPressure = rewrite(curPressure,u.bar);
+end
+
+% Convert from symbolic representations to doubles and strings
+% to display the results
+[pressure,pUnits] = separateUnits(curPressure);
+pressure = double(pressure);
+pLabel = symunit2str(pUnits(1));
+
+disp("The pressure is " + pressure + " " + pLabel + ".") %[output:54142779]
+%%
+%[text] %[text:anchor:H_BB47AA0E] ## ![](text:image:26e9) Creating a Simple Interactive Live Weather Display
+%[text] Follow the instructions in [CreateCurrentWeatherAppSoln.m](file:./CreateCurrentWeatherAppSoln.m)
+%%
+%[text] %[text:anchor:H_3FD9B850] ## Further Explorations
+%[text] If this has whet your appetite, it is possible to go much farther with integrating code back and forth between [MATLAB and Python](https://www.mathworks.com/campaigns/offers/matlab-python-cheat-sheets.html).
+%[text] - Documentation on [calling Python from MATLAB](https://www.mathworks.com/help/matlab/call-python-libraries.html)
+%[text] - Documentation on [calling MATLAB from Python](https://www.mathworks.com/help/matlab/matlab-engine-for-python.html) \
+%%
+%[text] [⇦ Main Menu](file:MainMenu.m)
+%%
+%[text] ## Help us Improve
+%[text] [Share your feedback](<matlab: ShareFeedback>) to help us improve this module.
+function out = TestPyRun(txt,in,varargin)
+out = pyrun(txt,in);
+end
+
+%[appendix]{"version":"1.0"}
+%---
+%[metadata:view]
+%   data: {"layout":"inline","rightPanelPercent":40}
+%---
+%[text:image:3056]
+%   data: {"align":"baseline","height":23,"src":"data:image\/png;base64,iVBORw0KGgoAAAANSUhEUgAAADoAAAA6CAYAAADhu0ooAAAEp0lEQVR42t2a208TQRTG67OJxvv9fiGoD6LGgPiCGo1G\/wljTKDl1pL00RuKIKCIIiKg6ItB8IJ38K4Panz13RcfSBBBQQHRek4ys\/kYpu1uu2132+Sku6eb6X7zmzlz5ux6PEn6lJaWbi0uLu4mGyLrJWvMz8+f4UmnjxA5QhZS7HNZWdnUdNE5hQR9EsLGioqKWuj7kRRbUlJSmS40D4Co4yD+rfAPEdW5rhdKQj4KQQM4J0n0DhjCVW4XuR9oHlV\/J98rSZVsnmuF0nz8oNIsLCxcFQwGp4vf86AjzrhV5D4dTTq+Tr8d0VD95fP5Frpx2L4XAgYlTQpMq+n8DxKm4+0wV6tdJZIo7YWbPwbi26QfqdL5S+H\/7SqqdMPvJE2iOFPOTUEzpM5bpEodUOMWkXs06yb7r6qZEc5dOn\/hKqqQCESiOYkqic4Ff62jRZKg3XCzJ0B8q0akjupzSZU6aZGTl5Q34kZ\/BgKB2ezzer3LOMcNJ5SpSvJIlY7POTWn3QUBpRzEt0QQqYvMzxxNlW7staRJQ3gO0Bw1IdSYz9Qx28Bf57QhuxNu7iSIbzYhclKEpvZ6HElVR5OOl5qkGZEqdcB5p9DMC0OzyYJIXaTuFr4R6rzFTkj3jK1WHDRDarSmdnPAX59qkbkQaU+B\/7IqglM7+g4qVqu5rhzaeeoIqpC2RaVJN52pGfYbdFRlW0iVrr2QcppkFSC+MUxUNSt0AlU6f5JSqpCuGcUtv9+\/JExZ05JQpErf2eC\/mOxIi4v6aRDfEGGdtCJUjeCPhW+Uk5BkCu2xQjNGoQZVWl+30Pk\/4W9I1tzM0RWfeVhFyXysCp0QyaHoPUZtLU\/G3OxWadIfL+Dilt1CMZrTtZuB6qVE7zezdUVnDv0mctlYhKpUHyaFKoR6SzTjEYr\/pVBtTDhNLDZz0m1ydxKrUHWdfiCp+ny+FYmgKUP8sHx8YJamDUK1VDnVtHs5wSFTDeLrLOw34xGqrtf3E0IVgoBRiiwoKJhvlqZNQjEubIKOb7Jr3TQaxeIyF6+sbMFsEKqu2\/ZShQZVmsPJFhqOKrVzxTaaWFTW7SNNCD3IlUI08h2KYXOO63eXpErtrYwnCHWpNDniWqVpsxlUacnLAhDNsa6bWTqaolIQSrFVwei6FxdVGlZ3baY5SNav2KCdVLlYblXkRqB5FnqvOlYKNgWjUJjsTEIZpzbXWIm0d9QCMlfneI\/oFKFKhoZgWs0GIP7zv+qDHu7BeOZVAoSqWZqEM+73+9eaodlpN80ECjXiBwLih87Rnoith4vrgGZlvJEyQUJVqrdNUaULOmRp0U6a8uUMssNo\/BDYBqHDnKlppt21qDTxwQ7vGhywbkbrxBrN1Bsny9DRbFcLxV6vdxad\/3C6UJyryvRrU7OgdfBjPYivcIHIkCYX79BSpZObLqYZkSq\/kicjaqZ04oMcrpS7SGRIzeJIy60JVDk6SZpcbRdDeRr5v2hyU6fbV\/l8VVlXm5lcX0wJsTveYpMVw14PzMOGNBQqE4h+3M8x5hti3UwH64S52y6D0YALA49Z6+P3hCXiDLH2fEsjgd+ZKr9wyRr\/A+UKAPezYlA8AAAAAElFTkSuQmCC","width":23}
+%---
+%[text:image:00e4]
+%   data: {"align":"baseline","height":70,"src":"data:image\/png;base64,iVBORw0KGgoAAAANSUhEUgAAA1cAAAB1CAYAAACiThtQAAA1S0lEQVR42u3d93oUZ7ot8H0H+xL2HZzz79l7xmOPAxjJ3h57HCfY47FnbGNj7LGxcRhykgTKoRW61co555xjt7JaOUcUkFAEJMQ63\/c2LYQNtsCAwKz1PL8HEK0O1dVVtbqqvvoPAP9BREREREREv8x\/PP+8E4iIiIiIiOju3bNytfsWOIGJiIiIiIjlahue3e2E3++ye0b9\/bkt9L+fuv5zjWWLiIiIiIhYrliuiIiIiIiI7m25chzy97QqTi85OeHrPzqL8LedUfj+Cyh+31nEveOMI6854\/UXnMTTqmDtet6OE56IiIiIiB7rcrXr+t4q7fOXnVD8nhNmPnUWi585Y2EL\/e\/5\/c5o\/NDuuCpaW\/d4ceITEREREdFjV64ce6t0KTr86h7Rv9cJy6pAze63m\/70x3TpWvrMbnKfM3zfchK7d3MPFhERERERsVyxXBEREREREd1NudLnS2kf\/8EJ3R85C33Y360K1e3oQwR1wdIOv2YfBINvABERERERPTbl6jnF6bqUvzlt7oma+fTOytX0lr1Ylg+c8bLzjfO3+EYQEREREdGvvlzpPVb\/fMmud699D9T8\/jsvVo7DBLUF9fuHXnPGE7ucBN8IIiIiIiJiuWK5IiIiIiIi+vlypc+NOvKa3awqRg7Tv8DKZ84Ie9t58wLDHNyCiIiIiIjupd2794gnn\/w9nnjiSfHUU09vwzNC\/95vf\/s7PPPMc+KelKunVPlxe+sFMbf\/xt6nX1Ku9HWwCt67cVHhp7n3ioiIiIiI7pFdu\/bghRf+V3z11dc4fPiI+PTT\/di\/\/7OftG\/ffnHw4Dc4duwE3n33PaGLGssVERERERGxXO10uXJc28r7T85Cn2t1J4cFzmw5jHArPWJgkSpXf3S2e2EPZwAiIiIiIro3nn12F1555VVRWVmJ+vp6kZycgtTUtJ+UkpIi8vMLMDQ0jHPn3MWzz+7+2YL1k+VKD2bx9R+d0LXXbuZTp809VzPbLFe3+rm+6HDfx06wfmCX9jcnvKZK1nO77ThDEBERERHRvfDiiy\/ByekF4dibtR369vp3nZ1fFL\/4nCu91+ofLznB50\/O4vQbzpt7sQY+dsaFnxg1UB9CmPWuM46\/buf6pjNOvPmCOPbGCzj7ljO8\/mz37WsvYPce583DBDkTEBERERHRvdqL5RiUQv\/9Tujfee653YLlioiIiIiIWK4ehnKl6cP0ntxl97KTKlpv2U2oArX8mX1wCm3uB0VLn59V\/L4TPn\/F7uU9e3DklV3C7dVdeM1pD952fl54vPqc+vluvLjHSezioYFERERERHQP7Nnj\/IvcyWP9bLnSfr\/b7tM\/OKHhn86i7UNnNH6g\/n5dz17nm87HmtznjH71s\/i\/2X304vMo++vvReffnsKnL+3GMVW0tIG\/P4mSv\/wer6rCpT3DckVERERERPdgQIvy8nL09vaKhIREJCUlb1tHR8eWAS12\/bIBLRx2X+f0vH3gCe0vLzjhnRed8eYLdm5vOmFKlarFz+zaP3LGv15xxqvOdi85OeHtF\/bYvbgHTnvsowRqbznvwSuqVDkehzMEERERERHdrV27npfBKLRDhw7DxcVNfPnlVzhw4OttO336DD744EOh7\/Oe7LliuSIiIiIiIpare1CuHPTherokaTFv70HZe07If9eu6QMnLOx3wvJndtP7nFDxvhOK\/m6nb1tyXb769wcvOeGpXXbPcAh2IiIiIiK6h\/QhfNrvfvcUfvvb34mnnnr6jujfefrpZ8VdnXOln4Djzn7zmyfwuyee2hwhQ4\/k9wcnO4+3nBH+9gsI\/atdyF9eQMCfX4D\/dQbFqH5uevu6v964rVHd9p0X7aVK04\/55JO\/lzaobX0OemI4Joz8\/Mmnt9Uaf24iO46XdLw2\/VjbueoyERERERE9WuXKQW\/z696xXb+oXOkH10Xj88\/\/JQKDgnHq9Bm89NLLQg9F6Dh075ndznKRYQf9762e3vXjn9+4vTOeU4\/lKFP6vg8e\/BZ\/\/ONrQo\/K8cUXB8R33\/9bLuD1v\/\/7B3Hgq6\/x+utv3lTEbleKbvV\/jt\/T9Gv905\/+Ir744ku5WJjj\/253f5xRiYiIiIgencMCXV3dcOaMizh06AiOHDn6kw4ftjt69BgMhkDs27dfOLoHyxXLFRERERERy9WDKFeOEqLLk6vrWQwNj4iW1lb15zAKCgqFHsrQcbie3jWmb\/\/0dc+qoiKl6\/oFuhz\/94y++Jaya9eezds+\/bT9\/3\/3uyfFm2\/9Cb19fZsv6K9\/eRvdPT1i9sIF7P\/sc3zy8T7R09uLjz\/+BL\/97ZPCcXGvrWVr60XCtl4sTO\/aO3vWHUaTSfy\/\/\/c\/m4\/Z2NSIl1\/+4+YuQCmSUjafF\/r1br0Amf6\/Z5\/dLWRaPP3cTxY9IiIiIiJ6MPQ2umMo9tzcPFRVVYmoqGjExMT8pMjIKJGdnY32dhtOnTot9I6ZbZUrR\/nQD97a1qbuNE7on3322b8wODQodNv7WBUc7V\/\/+hIenp44e85dvPrq6\/j975\/B++\/\/U\/j7G+Dp6YXX33hT6Pv++uuD4uDBb+Dj47u5h+yll\/6Auvp6xMbFC33fjU1Noqe3DwGqMermqOnn98Ybb+Gjj\/aKoOAQnFbP66U\/vCx0wdLPWTMEBsmY9G+8\/qb45wcfwmK1oqu7Wxw48JV6Ta6iST2Wvn8vL2\/xyb5P5fU7Gu+JEycRrB7r88+\/EPpxHNPi22+\/w0k1wf\/857+KZ57ZxZmaiIiIiOghsHVny53SO4UcYzRs+5wrliuWKyIiIiIilqt7UK4cI2D89a\/voLe\/H4cOHxG\/+c3v5Pyn2ro6YQ4LQ2lpmdCHDCYmJqKtvV2Eh0fir2+\/g4qqKpGalo4SdbvsnByhS1VHZ6coLCpCbl4ebB0dYv\/+zxAdHaNuXypOnDiF\/IJCUVFZieiYGLh7eAp9X3p8ev34Wnx8AuotFgSHGIUudkXFxSI8PAJl5RXIzMwSp06dkccfGh4Sfn7+cHFxFX0DA8jIzERpWZnQxe7dd9+D0WgUuvwlJCZtlr6v1OuJi48T+lDF9IxMvPfeP8R2RxMhIiIiIqL7a+to4XfjTh7r5nL1ti5XfapYHRZPPPGklKua2loRHhGxWbT0HqP\/+Z\/fbhax5pZWhKkyMzY2LqKio1VZycLo2Jjw9vGRvU6a3mOk77e8okL4qpLjH2CApcEqdGHSxUgzBAaiqroaiUnJIik5BampaZiYnBShoaGoVGWuTz1vTe\/N0ieeaSFGE0pUURoYHBSvvfYGIiIiUaTKnaaHVjysnrvW0dmBt9Xrf+PNPwmLxQpfX19VnHpETW0dTOqxhkdGRVJKipIk0lSR1INh8JwrIiIiIqLH102HBery0W6zISTEKOQwv3\/8E51dXUIfyldVXSOCgoLxP\/\/9283RNFpUuTKbw2QADC0gIAA+vn4IDA4W9kEj7Ht9PvxwL5586mlkZWcLffjeiZOnNktQZ0cnTqp\/a3\/\/+\/uYmp6WvUNaoLptQmIiRkZHhYeHJwIMBjlEUfP09EaH+n1NH5qYlZ2DwaEhoUci1IWtpKRU6HJ15Ogx0dzcLIcn\/uEPr4iKyir1+wGbhxAWl5TAxdVts\/TpQwHT0tNFZFSUlNM72WVIREREREQsVyxXLFdERERERHSrcuU4nO3ZZ3bBz9dfBpHQ9PlNza0tKC4tFe+\/\/w85BE\/T51klxCdsnnOlDwnU14sqKysXqap0ZGZlITwiUnzx5QFYGxrE3r0fy5Ds6ZmZQl9P62\/vvoeRsTExMzu7eZ0rXYimZ2bUz+wOHPgaH3zwoZQ5LS4uHvkFBXI+labHsXcUMV3a8vLy0a3+run78vb22SyALi5um0Ox64EuXnnlj5tDNurXeFj9XB+uqNXV1ct5YQXqsbSP9u5FQlKS0OVKl6qfukYWERERERE9BuXK8Q9dDJydX8T33x8SJlOo7Bl64403hb4OVJ3FIkJMJiknZ8+eE7q46D1df3v378LPP0DoQSG0115\/A99++73Qe8i2jur3wQcfyYWCHXuR9F4sPfqgpp\/P0aPHN\/dk6fvRj\/PRRx8Lfe6Xh6cX3nrrT0JfkPiMi6vw8\/eXkf0cr0efF6VHGnT8vx61UJ9npX3zzbfqsf5XbqN9\/dVB\/OUvb+P5Pc5CPweTes3ff\/9voUcQ\/PTTz8TevZ\/wXCsiIiIiIparG+XKUbAcA1zYL5r77OaFg1977XXUW63i5MnTchFex0V1HYfDOQ4xvHEx4V3CftFd+\/85iojj344Lcm3+jnrsrYNDPHP9wsNPX79Qr+NnWy8U7DgkTz\/\/H\/6fg\/49fRvH69u6t0nfdut0eFYufPz8ps3poS+A\/LTjAsO7eSggERERERGxXLFcERERERHRfStX2u3GeNeH6OlD4LS33vrzZlG61SFxt\/r5D392u3\/f7vfu9HEcP9\/O49zqPu709RAREREREcvVtm6si4RjL5YuVvpaVZyIREREREREd1iuiIiIiIiIiOWKiIiIiIiI5YqIiIiIiIjlioiIiIiIiOWKiIiIiIiIWK6IiIiIiIhYroiIiIiIiB6hcvXf\/\/0bEBERERER0d1juSIiIiIiIrpX5cpsDgMRERERERHdPSlXYBiGYRiGYRiGYX5pWK4YhmEYhmEYhmFYrhiGYRiGYRiGYViuGIZhGIZhGIZhWK4YhmEYhmEYhmEYliuGYRiGYRiGYRiWK4ZhGIZhGIZhGJYrhmEYhmEYhmEYliuGYRiGYRiGYRiG5YphGIZhGIZhGIblimF+xblaUoKrKSm4cviwuPTSS7j05JObVv7zP7GsPq5b6Z9tvY3+Hcfvy\/0pDMMwDMMwDMsVw\/wqc21+XkqPFChdmv7rv35Umu41\/RiO4sXCxTAMwzAMw3LFMI9spEzt34\/V\/\/t\/73uR2i79XHTZ2mhq4hvEMAzDMAzDcsUwD3GhSknB5XfeueXhfA8b\/Rz1c+VeLYZhGIZhGJYrhnkocm1wUPYGPYhD\/e7nIYT6NejDFxmGYRiGYRiWK4Z54KVK7\/l5VAvV7ejXpF8bwzAMwzAMw3LFMCxVLFkMwzAMwzAsVwzz0Jaq+XkZoOLXXqp+eF6WPlyQYRiGYRiGYblimHsSPejDo3xO1b04J4sjDDIMwzAMw7BcMcwvyv3eW7X1QsBrHh6bFwLWbnVYni45W2\/zwwsQ38\/nyr1YDMMwDMMwLFcMc8fRhwHe62tU6fIjF\/VNScH9PJ9J37d+jPtxnS1d4jiqIMMwDMMwDMsVwzzQYrV5LSldpnawkOjHvpfX4NLThgWLYRiGYRiG5Yph7nuxchSqhzX6uek9UCxYDMMwDMMwLFcM89AVK8fIeo9S4ZALIO\/ff9d7s\/S0YhiGYRiGYbliGOZHuZu9OY9iqbpVqdSv4W730jEMwzAMw7BcMQyzGT1S3+M+uIPek3U3Iw4+zIdAMgzDMAzDsFwxzIMsFaog3cmhcfq2v+ZCoYvmHU2P\/\/ovnn\/FMAzDMAzLFcMwkEPb7uQ8o8fhgrr6Nd5JweI1sBiGYRiGYblimMc8eo8LR8i7zbQZHJS9Utvdm8cwDMMwDMNy9fhuVmN9bQ1r121wgmxvql21T697e6cb4urVq+pdgXhQ2e65Vvfj0Let89\/Vaw\/n+30ne7DWQ0N\/8fRY3\/J53Ngyf+h5Q\/vp+Yef4rv7+K3b58P1q4K5+3XK2pbPNMMwP7cNtr65bL\/GCfJwbgOo90bwDXr0ytVyXwlOuPiJ4eXrPxuuE3GJGZi\/h+v7jel24Xn2NDy8vODj5S68PCJgm176RfddkxInKjpm7vh3L3RbRGlB20O4DFzHaEuhCPY6i7Me5+AdmS2mFy7fgxlgTFTUNGJxHeJBZbtDr9\/NoYDtZdE44xIpHPPwxvKQiDx1Eue89fx3Tnj5+qJ1cgHzPaUiPqMUV9Ttr2y5v+6ydJFe3P5A3359ftl2B\/i4uzdhDKH+Z+Hi7il81fRw9QoVtvMLuLo4jIaaJjHcVYP05HJcmOgUUZk5mBjtFhWNbfd1BT3VXizC0yvx6FeQa2guMIujp1zh5+sFd3cPEZVdg6UrD9+adGGwGSW5TeJhqtFXz7cKd9fT8FSfaS\/Pc8IjKAlTy1cw11EgkhJKoJeWd7rEvDLVjriINEyrFz19mxe+OGxBXHSeWHjk5801lMUHIrqwU9w0J15dRFKAD9JqR8T9zQoKwkNF++Sj+YmfbMoVfqHZuHhp65TcQEdJEvzNheKBfhVwdU5kGv0RHpqMwvp6MTszhpTEFPTOXRUPYy5faIbbv8+gvu+i+LkM1uYgOadBPCrd5PJEm0gsaZfPYnNdleibucT69KiVq4XufLz91l+EW2yZ\/GypK0+c8wqBnoWXhpuFKSQA5pgkzKgFhTbSWAdL9wUBXIK1IA\/DixBYGUeTzYYV9Tlduf5ZXR2oEGeCMnBxy7eMAxXJCAnOwtj5cVGaGY+wlHRML10Rtqo0+PoYRH5dz\/Xl05KozDDCFBGM0wePiULbKLprikXXuJohry2iurxcjK3oMjGEFHOwCAqLQtvwOIoDTop9+w6ja3ZdTLYXwhjoi+jEMjF3ZX1H3p+16SZ4nnQXfdc\/X1UxPiIwvlY21Pprs4TR4IuYnPrNPQ8XRvtRlB4vIpJjkJRRgVm1dTF72b6A76lrRE9nqyiuqN\/c+BhuzIPB3w9xaWXi4vo1XFuZQEpsqAgMDkbT0OKNhVhjCYx+3iI6swTzl39+4bzdQwL1taDurCxMiIRQVxw+fFTktl2wr64nm0WYaxjGt8x\/Uy3pCIxOQltVuvA2JuGSzNE3Yk0KFKbUZr0ERJIqPVq\/mgyXRppFbIAvAuKyMH35iuirq4Bt9MZ06qitQuv4PCZtVSJMTa\/Q9FIxd+n289d2hqm\/60MDL7TBPSgRU2rtM3V9DdRRaBbe6fW4ujCI6tI60WPNRKBvCiYH6sWZ4FAMDbSL4oYOXBhrRUlBmogz+Kt5oRiL6j4X5X4voS4rEuYIk8hKz0dz93mxuSF7cUJYCsuQnhYJ\/5gsMa3KxpQlQZxUy4n1tctoKE0ThkB\/hISkYnThmlg4b0N2XgaSTD4iIqsSK7KpphcFw0iPMCIwNEw0DczvUFFYR05SgIitG7PPh6szIs7LC6Ud81id6hBR4SEw+AWhoKZfzI7ZUF3bKeS7kZE2lNV2iaFh9T6U5CLB7C3yqlUpLk8XPkFm1A\/emBeHrXkINfggMqNKyPx+fgA1GZkiPDoUYVFF4uK1y6g0umDfR9+Ktuk59JTnINjPT8QVN+Ly+oZ40FnqKRNuaiN16wZUYYw34honMd8QJ3y8k6G\/n9c6y1MQGOCP5OpuYf+9JVRnxAqDvz\/yLP1iZcwCzzMm6P3mWnNpMrLUz7dmrrMA51wjhf5+cqS+UBh91PtQZJUvA2SJuHYRxYkGmOLjRY6azn0Tq2Jtrh+JpkAER8SIjrHlHdogvIRU43F8fthPjG5ZLi21JeKDN99HaIZV1NaXYmQR1z9dK+rzWIjBuXWx9f40S3YU\/AKDkN8yLmS90dEucpNCEVVgxcr8eZEbr+b5GAPOfP2daFKLiGtXziM70SQCAkJh7V8Qeo3VXlCK+KRoUdLUjZZCtTwPCBAplTZcuXpNPOgM18eLvfsPoaJj+Ma6b6kfhm\/ex2dncsTEsA3lNX1CyvpoC0osXcLxibq2PCUa6wuQl5ogzOEpGF5R8\/TFGVGfnaPW8ylqfloU\/U2FCPAPQlZFp9DbCpVJ\/uKD975CWlkNSmurxfnxHvh6+cGmZnJtZawdYaHBdmqbb+wh+NagtcCMU8cOwj+6UMg7eu2aON9RCnOwWt6rn2t6e607LxwBUdUCVy8gPTVRtIwub37JpS2NtyM5yh8BBoNIquq8xZ4i+1ZVS1ECjGEhyC8oF109ExjvscDSOCh0uhoqRMPARflyvDErQRj8A5Ba031judHfiJgAtR2XkCOmLy6iNtlD\/OmfJ9DeP4qGunLRN3cNG2pdHBMeJIyhCdCLc1mkr8+hoTYDaVGxIsRoQrtaprBcsVyxXD2G5epqScm2ypU+9+hxL1d6z919mVYsVyxXLFcsVyxXLFcsVyxXLFf3NtMdZfCPShBGz+PIb1vA+niF8AuOxdR4F2JN0aKhfxBtJYkISysVDYUpiEypFRtLXTjw2V5k2ZbFnLpfvTGvj3BxHOWyOlgtvCKLb9qoGW9IR1REAVqqE8ShY\/7oGh5Fe1G0cA9JRGdnmwj3PYvs9lE0pQcIQ0weemzlOLHvC1E8MIIcn2Miw6pm7o1xeJ11F5axKRSE+yC5sFnYrGpBVVAJS06SCDSkY0ptnGkeHt5oHBhGdX6WqO2d3pH3Z2NpAIYTx0VgbAZKymoxs3RZXF69guGGPFV408Xg4AByEoKQozYYtK7iMBw6ZRS9wwOI9j6J5KY5gasj6kMYqRbWJeKsfwS62iuFn08YWrs6UaQKrmZpb0dBfLjaqOgWg10VMIXGo6mjRhhPuasN1SFRl5uMxu6fPzRTnyP0s4e6PfnknR+K0ZotohJrMNSaL\/zUvKUPvbhyvlXE+CTedPjOYmehKqopsKmCqhnC0n5UrpozIkWUms6J4YGIKW0RszMdiDaGida+AbRUJCAquVRUpgbCL7kOV6\/MiDhVfmtbLQjxdBfWvkHUFqUJy5aScatsZ3ALXVjv4tsVnDvngficQlFSUoRwbzdRpjZe1iYqEOAWLJoaihEWlIHzQw3CUy0zOmrThEtUFjqLjfj6mJvo6OqA6fRxZLZOiVFrGrwDotDd1yI89r8P74xmsXlIxFilOPjhQWQ2dqIuO1R4RJVioDFTeEQW4sJoOxJS8sTA0CDSfY\/DM7lRDFWa8NkxT\/R020Swy3Hk2AZEhdkNUZlNGFTLCy0\/twbLO1Su8tJMItPmmBOXRIJfCGrbR1BXlCEKm3ox1JKPQ0fcRV19MXw8DWJqYwPNSb5IqeoTDWlu+MY7Bn22anHs609gyLaKpoJoBIVlo6ezToRHJaFPLS+KUoJFclkHZmxZ+G7vcVHf24M4n1MivKoLo9WpquQliQ71mfL2CkHP8LAoyklD18SKeOBVYLBKHHXxQW5REUqKckSIlyc61Js7Y00Q5tAstFXlC3dDNLq62mD29xA5TUPorohFUGim6O5qRnZypujusCLMLwzFuQnCJyQB\/bOLNz2H+e4SGAKSRGd7OXzPGUVLZwcyQrwQW2ATrfmh8A\/PQU9vrTj6yZtIaugTBQYXJJd2o7exUBQWNeLyjsybq8gMD4B\/ZIyoaJ+R+VWrURv0Xsc9kVzRIrLCvJBQNamKYavw8ojClP4iZPOw1nXUp4cJr\/B0dHVa4e\/pJWoHplAcdla4hmSif2ICaYHuIjynCa11Cfj3F5+LlvFFVMSHIbOuUwx2WRAcGCG6znfC98B3SG7oFe2FZniq5czQcJ\/Iy0rHwOyaeNAZqEkX3oHByKpq3TynebS1FhFuXvCMrBDnx2vh4WIQs+oz3RhnQGJ5t9jcxp\/tECe\/+zvi1GdVay9JgldYOvo7K8Xxr1xR2z+M3spU4REcp5bDnUgM9hYJdX0Yby0W7q6xGJ7ohFeAh2jt7YXZFIGWjmaRFBGvyuuQsFWkIji2APNXIB78h3xYhAdGY2SsDyG+waJX94eFTuF57hyquodgKc4Rtb2T6K9IRrgqoFpaTDBCs6vF3Mr18n\/tkqjLj0eRtQtDXUXi0PeH0Dx5c7uasKaIs2cNaO+zIeTbT4RXej1ac4PUsrVM6GSFnhVRlb3orElBXGKFGBxQn3VzMIqr6kVMgAuKmgfRWp0jqpr7MWzNFIe9knBxcQphavmkFTV1INmkPm+VLaKtLBlnjQlicqofHt\/\/AwkVXaI+zQAXnzRZt+3M+o3lyl6u2grhn9ooFoaqcfpcMFpbykVEbAKsxYk48vnXIsRsgsnfBd\/4x4vRgUaYUzNEV10ZTH7+yM+yimq1UKnquXkltD5WJ7799jt4+vnB389buJzwQdvURQyVxYmgyCq5fZrnUVFgu3E+1qiawf1SkhDn7ilqhu01rcJstrP1Ij\/YTeQ1qw2XjUmEBJlEVU0JzhmCMKU+W1NbvlybsOSLpNg6XFubF3Fq49LVxQuFDQPi8k4ehrw0KoqyUuD63Sf48NtzwtI5geJYN3x+5Jwwm43wURu05oRS0ajeO3NCrdAZqUpQZbREjHdWITqpHEtT7cI\/LAqpYZ4iJqvl5r1nUxa47PsYXkajMBv98Z2LO6psPSIn6DSOevqLnIZBXNnGtNLDh9\/zQwJxBdn+p4UptxHjfZXi5LETaJ3TDaVb+Hx+QJVJPwT4eQk3FxdUDs1jpiVF+JlTf1SuOvKN4r2XX8N3nsmbP5+qCcX+gweFyWSC0XAWp07Fi4FhK0INaRgaaxJxsVW4fHkOCUFnxBE3P+TV94lLP\/PN6nYuMHy35eqs21lEpmaLvNxshHn\/WwSrFcfS+XqE+oSLloaim8tVZDy6LNnCKyEP7RUx8EwqEzp18UYkFdeJYnXbCtuN4+Rr4w0wZTaLzdl8qFYYfdMh37ut9IiAs2YUlyQLr\/BctcFxDYvTPSIzNhwnv98H15R6MVidCK+42ht7HKPdkVjULfrK43Dq5En4JRSKueWdOo59A+WJ58QXR1wQaPCD1zkX4RdTiAW1bFpfWRAdaqVr8jyNvYdPid6ZC8hSRV5rGuxHZnQqxhY3RENGEELye4HrZwwme6sN\/FkIzLcgLSoUSdGB4ssjrggNNcLf9YQIjChCf3suQvwThU5vSZjwS7dgbqAGSTHVYnVxEIEex3FaFSytrvs81tTsu7YDu1ouDVaLw6c8kJ6TjdzsLOHn8g1SrMOyV1qLMkTAHBwiMlrse7KnrLkiNjgBgWZPlPSvipveqdlmnPzkXbz9\/nei+Rbj6lxU5SrYP07ExvkgomJAyCysSlSgb4SIDQlG+9SN38sLOIVsy5iw5Zpw\/PQZBKdVioXVKzs0b64iLdwP8fl1oraqDrOzg6IwJxFxpmjEVI6KCx1pMGfWYrAuXSRW\/OCc5bVxGM56ispR+wq3KztOpOdWoyDWKDIs02ojdwhBp11F74p9b1iO2U\/UtKhlzZdfwlO9d1qoMQinTh8TxS1WxLu7o1c1UW19ygpPt2M46xsumofnbuw5fMDpr0wUfgnFaCgrxuD8omguSkJWdg58g\/LENbUJHBceJpp6+5Gako6e2XWxOR9OtQpTpBFTapNHw7UpmIweyCvKFpGGJKnBpUYXkVF\/\/vqe1RzhkVyO5TGbiA6twPrGFAKNfsLW14eoqEhkpkaJk18dgik8XJgDPfCtTwTG1fsy\/uC\/P8GYWqZrLh6haj06hnjvQyKksF+9sQsiVT3HMyfdkV3dKVZVlx6qjsGHr70mvjwV+aN1+uZ26eVldFWrZV+Qi\/jmX1+jYXLjpuV1RYS3iMmz73nqK0oQMdkWtBaFIzy2WugUxBpEUkmTWs8fwL\/PBgizOQRnD51Ccna9KMkMxOHTXkgsbBJLaxtY7a8SPgnV8mVbfKjBLiVKLZejtxSmRUREBYtKawOCjF4YUosMDZN18HYzQ+8OmMZjk4ezXHnFVQnZ9ZodhO8PHBBecaloKIyHt2+cmF1cwuLCApbVgl\/Th9wVRYQKgykN9RVVyEoPFgnJJfjheZGXhmqEW2AihqamMHXdxSX7t0rdhTEiMLxMZmhHucpru7GfYbguAX6pKbJA1aqG7B+CUrXRr5WrcpUTcEYUdug5bRYhhhBRpQqge0AgJtUSaHJLuRqpzhbxUZVbPnFrGGkuhu\/hgyIgogw7MQbV4kQ3GnunxGbBtCQKg1cQoo2BMOY0i6WlRSwsLuLS2lXRlhOBkNhKIYuICzYYfTyEITQE+bq0XmgUvuYopKuFhxa1ZW+CvG9j1fBQG2O26UWxtLiAxeXVG6MLXruCoZZScfbEQXgl1vzsCm1b5eoOr9+0dr4Rroe+Ej7BRlV2QsSxAx8hqFBtqC\/1ighXVZRk3jsv5pfsG1QT9fHC9xblqkUtCDU\/QzTCzV4o61kS5y3ROG6IE3Obn4\/LAhuLyIkLgDEsXJSrMmx\/I9bESHsFfI9\/L1wiK39y\/rpv5UrNE37hOTe\/3tlG4eceh6HROoSrjRTt58qVTZUrj4QioVMVG4LUMqsojYpFWdvc5sNWx\/giRM1nIVvmtWVVrLRgn1R7uVruEn5nw1BSmiL8Y0ow0l2Ek6fcREXbMBpyDPDOqBEDVYnwjLnxOa6JPIe43C4h03F+CEkRnuKbk17omtuJT\/U6ClODRESJDdPTal6cviBksbQ2jQiDqwiKy8HoUCc8fE4L26KaT+sSRWBwINIKq67vVwDq0wIRnNspK14tyScatgsbYv28FWnRZsSHmURAci0W1fJicdFu9co6JhtTYPCJF3qqdBSYhSGrATPdFYgLKxH6M3917RLaK7PE8W+\/hzG\/Wzzw7516K4VvfO1NP59rylLrkRIMtGeLmMBIhIcYRVrTrH0vd12WiAlJQogqV0Vqq76o9+atx8sTtfBUG0BJyeEiML7gR59Te7mKF\/Hxvggr7RUyC3dXIcA3UsSpZXXrlh3U2X5HkVw5LvSSdGW6Wz2XM+I7t2CMrezEQaurSA31QX5Lv7CW5SE6KkWUV7WhOiUSpvx+gfUJ9VyDEWJKFR0jPxiUam0SQWc9RNmwfarZMqNFWm4NClWx0tJqxtRtB1SxchE9K\/Y9uZkh3qK6sQ6G425omVwUjvWPtr7cA\/NpN7Srt7R99vqn68oyGopSxL8PHkJczah48OUqXvgnVWO0vwEJ8WkiTRXS0dYyuPlkCr2eHChLFaGBwcjMq8Cq+pCtbvmyYmO6VRjDQ6C3BGRr4Np5GEM8UVCSKyID4uUAzRJVrLS02kn7Ir49S7gnl2FhuFWEh5Tg0pWJm8tVZCQyksOEf0AiZtT6TNPLh+UdK\/uXkRl4WBxxVQUl1IgA14PiK9cQzKmPyJwcsaeWXx1VCDr5nTCEF6FVFTI\/vwgRFeGDjLpRcWMjZF5kBB+DT1gBRqY7hPnkcTSM31yuqqK8RVS2\/XDskYo0kazKVVO+CeHxFqFTFBsgEout6jN\/Ein1I2JJlrdLUB1K6PudHWpChPtRcTgwDxM9VcInoUa+YHCUq4TUGLV8ibh+fIN8KwpzhEFUNTQiKMQDveo\/tLXhSvi4R0Dvc57BYxOWK5YrlitZ725jGPY7PSzw11yutjOyIssVyxXLFcsVyxXLFcsVyxXL1Q7nfFM2zoQVC\/uSaR4hB14Vbx8zY2lmECafcyKztgWtNbnILKgSemOsO\/Go+PMBF8yojdRo9\/3CNbr5R4+10lcmTgVn3\/J48o5ss\/CUXeV6t26ScAuIgtVSK4xe7ijsmkRvWZzwj0hXG315OPSPvSKnexqWFB\/hZspCp1p5fvX5SdGsNl7Kov0Qk1EtGqpzkZxbCltdkQjyisDQ5IBIjY+D1daBUrWBqJlSarETQ1qsTlrhdsxFpBfXormlFaUpcSIu34LhdrWQ9ggWjc3NqMzMRnnLsGjLNcNPbQz5Xd8g0kN7Znp\/Kf7450\/Qp9+EsUpxwtOM3u56YfAJQU2jFQXJsaK2sQU5Ub4wppeL1vZ6ZGXloneoR+RGRaHOZhMliWoBmFl\/87WSbpHtDGihR8Db\/vWtNlAb7wn\/uBpx0+K5vwRHT5jQN9wiotwiMHuLexitihRuqiitymbGjVjiA0RoRivm+8tx4phBdIx2ItzDU+RUtaCttgDJBXVCr456K0348FMXMaGWqDKoQlykqG2zoTwlUASm1dy2jOqBKu7XkPWYt+GUixfy6ppFS3MTcuMDRUR+C1YmKuHvGiQa6nIQ6J2Eif46cTokAraaVHEmMgMtxWaciswR8oWHKqERaoNbG2\/Og7ePCU2tNcLry\/0wFnSIzW0xtSGrfffF90iva0FZcpAIy2zAoCVZuJhyYatPgbspTdh62hF0Zh++M5WKrvIonDHfKJnlIScRk9cqOouTkaI+M13NRcLX34je+Z34VK8jM8FPJDTeYvW3NIAAH09R2NCBxuJwvL\/vgKibUM93pVUc+PhTZFrGN3+tItYTPuntsuLVotXGR\/P0hlgfr0FkaCg626zCwz0A9Wp5UZuTLQoaBjHRkggv1wihN4XbsgzCI7ke84M1CPIwidaOeiTHJ6Kto1Mkq\/c5rqJXPOis9JaK788Eor6lGc1q\/tXiVEHIaRrDlDVWGPxT0GkpEe5+ZjQ21iLIx0MUto9joDYJhqBE0dhgRVJSsmhSt\/dzC8Ps5RkRffoQYqr6brom4FxHHjzORYue7hoEnA0UNRYLEg2eSC7rEV2lUfBRRa65tUSc\/OJ9ZLWNi9acOGSUq3m0LlP4BEVhfHUnhrRYQZz\/aSS2XRQrbZn49ON9ovniBmrM\/vBV85hvuv2SFNX+B\/D5uSix9KMF\/lU05UYLD2M8Gqzl8PL0FQ3D0yhSG4RabEm\/fCbK40JEcHIFrJVROLD3I9E4uYLKMC8Yk4pFa5sFOUkZYnBcLUOOHEP7IsTCQCVi41XR6+wWUUEeyGwYFw86PSURwiWyDBtrF+D72d+Ef80EVjtKVFlIFDLYzqxVfPmvz5Fac4u103y3cDuyH\/FFzaI+Ox5BCRUY7SkQvi6h8smfackX5\/zDYWloQHSAl0hrGMal4QYR5JOP1ctj8PQ7K1q6uxDgF4Tm7g4RYfBBZl2baKsvRFZhNRbVCmrxAR9fudBfDJeTvuLGIW4XRcgZV2TVNIuc1ARUt9pQkxYhwlMr0VwYi+DYWrE0bsGpf7uK5vPXv0BZGRUxPqeQY7WhtSxKfPnRhygbvPSDyV8q\/HxD1HKmFoZv94vA7BaMtebgxJkA0dJihfvBb0V07RD6apLg6RsnWtW2W15WBiztXaI8KxrFlna0FEULn5giTA3ViVNnIzExPYJQX3dR1NKDjHAftS6tEbU5MXA3p4np82q+8DiOLjX\/a2sDJXA9GXyjhLNc7UxWpgdRbxsRjkX50liLKKpokQ3khWGriIkwISopHX3Tl8Q1ua1NlNTYj7cebaoSHYNzP96kuDgm6lr7b\/kt\/YVBm2hsHbq+YW5fhXXW58EYYhYVLY5Rd+znFVgLohGfkozSkjoxckH9\/NKkyIqNREZ6MWqa28XUqnwVibz4SGGKikfTyBKurc2KkqxYNI3Oi0FrgdoYMSI5u0os7uB7dGmqR2TEmhEWHoHMcptwLOd6KvNEhMmElMxaLK9fFRf629BkGxWO93a2xyIK8iwyBa8tjokaS6u8J9pkRznCzSFIzikW8\/rNWBpBZmK4MEeqMtU7vXkBws66fISajCIuvxbb+cJ120Oxb\/vQwHVVbIrROb4kfrD\/D43llegfmxA9aoP1VoeOL453CmtL9+begM0vIbqbRUuX\/dvAtpoS0TW9ilX1WdHizCZEJGSjX\/1Ms39zXYawyHQhP7l2FT1qZaVF6OmVXS0Wf2KabecQyuW7XbSsX0RFfjIiIiJFTFQY4jIqxIIeiGlpFM1q3tCmJgfR2tiD5YuTor6tA7MTfaK+sx8zI6pgdw4KWRbYGtHePys2rq7BVpmDjOwUEeEZjMyKQXFjD6lFeB91QVRyNMLTS8SCmjaXp7pFbdsgrl1bRl1mtAhNyEBtvQVWa7cYV2XXYrvx7eRYWy26hi6KK7N9SIwJR2h0gmgdW9qhT\/QGBtS8pHWfv\/Upx9NdtSI2zIj08lpYymtE7\/SVG3umDL6wzd\/YAB\/rakRT\/+zmsrHL0oZptYGubSxNoL2lbXOP8rClCJFq\/ktMrRDzanmxqqZvo6VD6NlxZqBFWPVgK1cXUJEbJ6y9I2gpzUKYKmtaRnnbjp3Xcm1pXGSnxso5I1GR4SKtxL7uWh63iYaGG8VvUK1Pws2hyG0cEtfnPjQWpQmzek051n6xtjSFhtqWzT27SyMtKK7ruOnLo0sXhmCp7xD63TjfWiWiQ4KRVX3jungbVxZgKU5CWmGWCHXxQV3PvFgeb0dMpBmhcWmiZ+byDs2b6+hurkf31GWBtSlUVTYLPVeNtqkCq+ax5n57AeitTEBgVpu43f3JsrkkBSa17qronhHyPjRbRNfI9S\/QLs+KwtQIxKvCX1lWLWRSqPV5fnKoMIeFo04th7WrG4tora6R22jXrs6jKidJvYdmkVfbs2Pr7fnRDlEny6OrsKnllDZwYQ3rcyOotvQI+7bQnEhwN6HnViPzzXYKL\/+jiIxIEnGJeTiv3hQ9ipzWWN9+09EWgy1lap0cgeL6XmFf3E+I1qYhrF9dQmOzVczMzaG5sQl6oEdtWa\/PosNFtCqxvdOrN32h8KAy229FZUO3+GHGWuvQ1D0hRlrLEKWWlQlpJUK+XhpqR2PbiJAjo6xlomHg5vI6o0ftM4Ugp6xC1NTWoGvy1lt8I6q0Rqt1SIi7qwhNtspWU31+koiNykB1fZPonFyR5bAlP0WYTWZkVbRjXS1rtUm1fI8xGxGZVCDOr2Jz2V6ZnIpGtU5tb20UI\/oFrY4jLSFCRMVmYkK92ZoeLbDOWos5NS\/MyfwwCosqxY5RclmuGOYxy3ZGwJO9V3czxPjD8Pqm+pEeE4HK9glxV5vh2xyG\/W5GVnyQGSxPRHhcLmotNcIYFormkWXhyPJAmTh7yoSL\/HjcZoZYQnNRnIjLsOIKp8gjEHv1bM6PREx6OepqCoUeTrl\/9op4FDM9ZEN0VDBsqoRpzF1mbQGtBSkiLLf11kfITDWLU97uGFFtbGSNk20n05UTKnzDSx+ZCxSzXDHMYxI9GuB2ioM+3+hxLFd67952zrXS9DlsLFcsVwzLFcsVyxXDcsVyxTCPabZ7LpF2+Z13HrnXtzhmQ1VNw4\/O37rXxUouILztc9N2KKvTKCvIQEKKXcvYjw+7WF+eFp22PqxyjXXrXJ6DtbxQjCxc5fR4hHLl4iiKM1KQmJ4vBmcf7Wo80W1FefMQ39hfPGOoz3RxpRhfus05oJfnha27E4tqtlnktyo7mvmxPtEzOMWJwXLFMA9ftjPE+Oahby+99PCXiHtROu+wWD2KxZNhGIZhGIblimHucbZ7TtHWQwTvalS8R2h6bOdctF\/DOWkMwzAMwzAsVwxzj7Pdc6+2FoqH\/RyjO43eW7XdUQEfpXOtGIZhGIZhWK4Y5gEXizs5DG7rXqy7unDuQ5b10NA72lv1qIwQyDAMwzAMw3LFMDsQORzuP\/\/zjguGo2Q8iiXrbkuV7L1Tv\/c4nH\/GMAzDMAzDcsUwD7hgOQqHPkzuYS4d+vwoffjf3ZYqx2GRv+bzzhiGYRiGYViuGOYhKFhbRxbUe4YehsEe9HPQpe9uDn1ksWIYhmEYhmG5YpgdL1hbz83Sg2ZcTUl5IGVLP4Yudvoxf8keqsdtpESGYRiGYZiHplxtbGzg8uXL9BBZW1sTV65c2fxT47S5mWO6bJ1Wa9PTWHniiXtWTG6iipu+79VPPsHq99\/jUn6+uHz+\/Paft7qt4\/f0fej7kud7D0vhTXusXnzxR8\/vh\/OXA+cpfqYfpen5w88\/pwvnzYdm3rxufXEe6yN9tE1rw73i6tQYruhpub4uOD8+GsvjdfVeaSxXLFdc2f3aytX1kqCLy30pWNstNaowrfyf\/7Nzz0GVtVU3t23NXyxX\/EyzXHHe5LzJcsVyRSxX9yh6gly4cIEeIouLi2Jubk7+nJ+fF5w2N9PTR1taWtr8U9v8\/9JSLP7mNztasnaCfs1zTU23nW4LCwvi4sWLm3\/XOE\/d\/8+0\/hzrac3P9C+fno5p6Pg7pwvXNw\/L9JxbsFvutWE5PRxLaWF2+u90e8lGsVqZg\/nZGSyq9bnG+fHh5linLS8vC5YrhnkM8kuGLn+U6Nf4a7h+F8MwDMMwDMsVw7Bk7Qg9YIV+bQzDMAzDMAzLFcM80OjR\/\/QFhB\/1UqWHjeeeKoZhGIZhGJYrhtnxOK4j9SjtzdJ7qeSCxw\/BdbgYhmEYhmFYrhiGuW3Rehj3aOk9VCxUDMMwDMMwLFcM80hGH2535fBhKVsr9+kaVLcblEKXKf3YPOSPYRiGYRiG5YphfnW5Nj8vZUfvQZLSpQqQLl76ML27ObRP\/66jROnBKPR968dgGIZhGIZhWK4YhtkSXZa454lhGIZhGIblimEYhmEYhmEYhuWKYRiGYRiGYRiGYbliGIZhGIZhGIZhuWIYhmEYhmEYhnkUyhURERERERH9Qv8f5YzGFcj6cNQAAAAASUVORK5CYII=","width":511}
+%---
+%[control:checkbox:97db]
+%   data: {"defaultValue":false,"label":"Check box","run":"Section"}
+%---
+%[control:editfield:84dd]
+%   data: {"defaultValue":"\"\"","label":"apikey = ","run":"Section","valueType":"String"}
+%---
+%[text:image:98df]
+%   data: {"align":"baseline","height":26,"src":"data:image\/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAApCAYAAAAiT5m3AAADOElEQVR42r1XSWgUQRSNGndR3Ii7V\/EmCCp4DaIe1Oh4EMHBwMjsq47Eg+OOJ0VIICAeFAIeXEADHgyoqChE1ASNhISAxH0jg5gxq+\/FX1A009PTM93T8OiuX7\/q1f+\/+tevqqoCTyKRWBmNRo8Cj4GPwF++I5HII7zT8Xh8eZWTTzgcnh6Lxc5j8kFgHMgCT4G7wBPgl8j\/YBGnfT7f1LJJg8HgQrGQE3diAXVciK5DIsi3o7+devh+4Pf755dMmslkpmGih0LaiHa1hf5k6J0T\/TYrfdMHKz8pFjTr1kFWD9ltvJ8Bt\/Dt1d0rYeG4Y7ZJMbAG+A300HLKuHkw2SuxKAe8lQ3Gdjv6llLP4\/FMQfs1MMBQ2SUOyaoPihur0X4BDGEDHVGLYbwhawCG6QG6W6yu43jo+uwSt3IyWLlA2vt09+F7CwlDodAaaZ+Q\/j3inZn0GENil\/gd0Ke1rwEjgUBgDqzYIe4lBiBbkkqlZov7r2hjXtLldom\/0LVa+x7QK9+NGjHduUvkfcAdbUwb0G+XuNtg8WV6QeLXbCDeKzo9QJM2phPosEt8ExijG9nG5NuKJK6VTTeXrofudbvEh2TS49r\/eakQMeQXNV2v9Nfbzc9c8U\/GWv2LKkmYEat+r9c7Q+L9nZvOdhLBhOF86c+MWJ5JkLVIX6jUdM1Jbsgk3NU1RRBPHCzQ2crxZR0U3CBC8saKGO3NCNNGx85kpk4QPLfaXJr8jGPkKs4FfqesJv9kcP1OvFeXa70Z8Ygmz1KWTCYX4fuDqlAQhnUVIWafQfesXjjgF5zlCrGWSBQuyOm1nuEARqGTqRgxKxejrm1iYL+URKPFEktJrGSDpRJ3aYlGYRhFwjK8T+lyle+1yrUsYjMM5ZG9l0tBzk3iYvGfWE6XVWYniyvEci1RgjEpZwP6Itwi7jfppHy31Mz3HSeGNZvw8aOAUs5h0olUqqqPFVIhjlcI34wXsMMuWWhEb76ibwPw1U1ibmCzwm+tdil3HEyfhcrdBhetbrW6pHe5RNxiVeTXukTcVEyevupCjA9YEqfT6XlyGXOKuINnQ1GnEy9y6uJeBuFn3qXxxyzmnP8Amz0wy7TM4YgAAAAASUVORK5CYII=","width":19}
+%---
+%[text:image:8749]
+%   data: {"align":"baseline","height":24,"src":"data:image\/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAsCAYAAAAXb\/p7AAADlklEQVR42u1YS0hUYRQejR4UvR+SvaCyWiS2DIoCKWjVYzG2SsYWQ+a8HRwXFkOgqdGLSoSeqyBaJUGLCKGkNpGtgiyScnpYBpaU5au+E+eH03Wu93rvP2OEFw46955z\/u8\/7\/\/3eDQ+4XD4Eui65199AK4d1DEJcBLgfw0wGo2ujkQi1yoqKlY5AFgDqnWw5lpaMxaLrbBkDgaDm7HIEKjTCcjxPqFQqABrdYEGsHaRXaESCAyCXpNFMwwuReDw\/77xusurQGJna0ysPR2K94CnGdQKesnUyu92J5PJaelk4c51Chzcu9dp0O9nkO3yvd\/vnwqlEbzvAf2yoB5sIkwyBt0doJ+0Qbdu2AXyC8UrOVuNQH5Q3IJegfrTfH8ikwC\/A9hjsdaYCQQCG6D4vVj0DShB7+HKXMGaQ\/EFADEGrPhJdn1GAhoZvRDKX4jFTvt8vhlWchSD4D0OGiE5AH9eXl4+PxNF+IoCB8sccyBfreQB8qJWcAC0CYqHeYE2cqEDNTmQvcc6hlC+CnXWq\/PCtTtdeGGr0HNWFz7aeTcr\/eT1eqe41PVWJYxd62zkovwXqQ6Cv8vErm9r8MZNEctLVf9Ph4GwecSOjPSQu8V28e6chmRrFPq28btHJhhSBKDIBH0B726HEDilAWCtsGCx6MmjMNgaHqBkiygPl3UmHE1OrjOEiqoqsqDHGizYxrqGAXCOriL9jJUOoq3lO9UDQItpQGD3PtXZRapFHB51oSchwiWsDWA8Hl8Cpb2svA+WWO4AXJ7Q0Z1IJObq7sUBN\/UQLr0hrHfANSCaQihrobiBf+dC+QOxSNk4MrdEyN1VvRy6T+DdVbOp2wpcCyutN8yDahjtVZ3A4sS2ALwflYxhaK1n0C22QfL8dkuNRYZBlKxxRLj6gg3XNgj+w8beLOriHcv50gocJ8wsfP\/ASgfMDlRs8XzwfGPeThMr2QcpEqFprJmPSoSwSvMYfCcFX6nFlNPEfAGrUuC1GkhxQpspTnTfKysrFxl5qqqqZouy0mU81ZmApB6cp2vKlrFVk+Z7TGRuPOsXRZSNfGYmEO\/ofoXmOiKKS3Ga6wPYeRNxk9Vo49BONAIL1mUdIBa9bxPgn+zMOkAqIXDdQbp1sKAy6uWeyWd0Cyuk5LDh3pTtez\/NSVJqNwbh5kNZB8htkTrP1zHA9dM1nZ07nExmc50ZQGA7M+GxyLden9MA\/OLm\/KKe34xPoKAD7jPkAAAAAElFTkSuQmCC","width":22}
+%---
+%[text:image:5db1]
+%   data: {"align":"baseline","height":20,"src":"data:image\/png;base64,iVBORw0KGgoAAAANSUhEUgAAADUAAAAxCAYAAAB6d+FmAAAC0ElEQVR42u2aO4gTURSGs6Lugo1WW2ghgiyCr1VWbRSR9YEgKoKohcQmEDAviYhBIaVbbKEWYi22YidoobUItoqwjSui6wt119Wsj+\/onXAcJslMZpI7AxP4Sbh37pnz3TP3zJ2TyWQS9imVStvRK1G5XL5ZqVRWZpL8MUCf0G+lz+hYIoGIyDYPIEc\/i8ViLmkRGkMfWwA5WkD7EwHEutmCs+87ADl6zfHLm4MLhcIqGs7RcV0WoA1xCa3vIkL\/CTsX\/w7G2Bka5oIMjlo4M6GBmOTRABHSeirh3S0LzSYQugHHgAPEJG+l7UOXtr6LgQeqYQZdRVf6Jc5frdfriyKIkOgHQToi1+0XpxGD+ywnhc348a5bICboqLMYmx02784hgRYAOqEzjHWoSIHiABU5kG2osECMP9lqC2IFiqS0qSdAtqAM0Ey3QOhUp81iX6F6DtRvKM6xsedA\/YQKCdQgyx0PcrKeQ4WNkE4K+LhGb6usQOHQOnnOCb31+WdrNW1TQC22BoW9Ddh9i6bRfNDdNkCH1c59LW0vpc8qFDYfo\/tkvMFqtbqM3xdkffgAmseXQ44dM3ba6bcGlc1mh9yzbaK3k\/Y37YAYc9Dl47A+xhoU0dlh7A579I3qRx6lbwAd8PAxHlA4V5BF3ea8Z11Ac62e52IDhb1bZuZL+lFdRWtQpflZzj3exlZsIvVc2b7jdW8xiWSWVL2ng4\/2ofL5\/Ars\/XJdXudN9wC\/R4Ce5PurFH58RN0+FLb2et130D1VVJlCu3zasw9FFC67dwboialUnZadQcBJsg+F09ewd9tkwLFcLrckZOTjkSgi3pmkUClUCpVCpVApVAqVQqVQ0UDp6s5IHKFMeaz5doufYuYz9bf\/XXmXQaqgcZH4I34pqBd+Qluz\/LpBUF3qCEUol3LgwyQAEbFHUrDxW6OTyk7NFEsaMYNpGL9qfoH+AOOEPfJuI6OmAAAAAElFTkSuQmCC","width":22}
+%---
+%[text:image:66c1]
+%   data: {"align":"baseline","height":20,"src":"data:image\/png;base64,iVBORw0KGgoAAAANSUhEUgAAADUAAAAxCAYAAAB6d+FmAAAC0ElEQVR42u2aO4gTURSGs6Lugo1WW2ghgiyCr1VWbRSR9YEgKoKohcQmEDAviYhBIaVbbKEWYi22YidoobUItoqwjSui6wt119Wsj+\/onXAcJslMZpI7AxP4Sbh37pnz3TP3zJ2TyWQS9imVStvRK1G5XL5ZqVRWZpL8MUCf0G+lz+hYIoGIyDYPIEc\/i8ViLmkRGkMfWwA5WkD7EwHEutmCs+87ADl6zfHLm4MLhcIqGs7RcV0WoA1xCa3vIkL\/CTsX\/w7G2Bka5oIMjlo4M6GBmOTRABHSeirh3S0LzSYQugHHgAPEJG+l7UOXtr6LgQeqYQZdRVf6Jc5frdfriyKIkOgHQToi1+0XpxGD+ywnhc348a5bICboqLMYmx02784hgRYAOqEzjHWoSIHiABU5kG2osECMP9lqC2IFiqS0qSdAtqAM0Ey3QOhUp81iX6F6DtRvKM6xsedA\/YQKCdQgyx0PcrKeQ4WNkE4K+LhGb6usQOHQOnnOCb31+WdrNW1TQC22BoW9Ddh9i6bRfNDdNkCH1c59LW0vpc8qFDYfo\/tkvMFqtbqM3xdkffgAmseXQ44dM3ba6bcGlc1mh9yzbaK3k\/Y37YAYc9Dl47A+xhoU0dlh7A579I3qRx6lbwAd8PAxHlA4V5BF3ea8Z11Ac62e52IDhb1bZuZL+lFdRWtQpflZzj3exlZsIvVc2b7jdW8xiWSWVL2ng4\/2ofL5\/Ars\/XJdXudN9wC\/R4Ce5PurFH58RN0+FLb2et130D1VVJlCu3zasw9FFC67dwboialUnZadQcBJsg+F09ewd9tkwLFcLrckZOTjkSgi3pmkUClUCpVCpVApVAqVQqVQ0UDp6s5IHKFMeaz5doufYuYz9bf\/XXmXQaqgcZH4I34pqBd+Qluz\/LpBUF3qCEUol3LgwyQAEbFHUrDxW6OTyk7NFEsaMYNpGL9qfoH+AOOEPfJuI6OmAAAAAElFTkSuQmCC","width":22}
+%---
+%[text:image:3a12]
+%   data: {"align":"baseline","height":20,"src":"data:image\/png;base64,iVBORw0KGgoAAAANSUhEUgAAADUAAAAxCAYAAAB6d+FmAAAC0ElEQVR42u2aO4gTURSGs6Lugo1WW2ghgiyCr1VWbRSR9YEgKoKohcQmEDAviYhBIaVbbKEWYi22YidoobUItoqwjSui6wt119Wsj+\/onXAcJslMZpI7AxP4Sbh37pnz3TP3zJ2TyWQS9imVStvRK1G5XL5ZqVRWZpL8MUCf0G+lz+hYIoGIyDYPIEc\/i8ViLmkRGkMfWwA5WkD7EwHEutmCs+87ADl6zfHLm4MLhcIqGs7RcV0WoA1xCa3vIkL\/CTsX\/w7G2Bka5oIMjlo4M6GBmOTRABHSeirh3S0LzSYQugHHgAPEJG+l7UOXtr6LgQeqYQZdRVf6Jc5frdfriyKIkOgHQToi1+0XpxGD+ywnhc348a5bICboqLMYmx02784hgRYAOqEzjHWoSIHiABU5kG2osECMP9lqC2IFiqS0qSdAtqAM0Ey3QOhUp81iX6F6DtRvKM6xsedA\/YQKCdQgyx0PcrKeQ4WNkE4K+LhGb6usQOHQOnnOCb31+WdrNW1TQC22BoW9Ddh9i6bRfNDdNkCH1c59LW0vpc8qFDYfo\/tkvMFqtbqM3xdkffgAmseXQ44dM3ba6bcGlc1mh9yzbaK3k\/Y37YAYc9Dl47A+xhoU0dlh7A579I3qRx6lbwAd8PAxHlA4V5BF3ea8Z11Ac62e52IDhb1bZuZL+lFdRWtQpflZzj3exlZsIvVc2b7jdW8xiWSWVL2ng4\/2ofL5\/Ars\/XJdXudN9wC\/R4Ce5PurFH58RN0+FLb2et130D1VVJlCu3zasw9FFC67dwboialUnZadQcBJsg+F09ewd9tkwLFcLrckZOTjkSgi3pmkUClUCpVCpVApVAqVQqVQ0UDp6s5IHKFMeaz5doufYuYz9bf\/XXmXQaqgcZH4I34pqBd+Qluz\/LpBUF3qCEUol3LgwyQAEbFHUrDxW6OTyk7NFEsaMYNpGL9qfoH+AOOEPfJuI6OmAAAAAElFTkSuQmCC","width":22}
+%---
+%[text:image:4b77]
+%   data: {"align":"baseline","height":26,"src":"data:image\/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAApCAYAAAAiT5m3AAADOElEQVR42r1XSWgUQRSNGndR3Ii7V\/EmCCp4DaIe1Oh4EMHBwMjsq47Eg+OOJ0VIICAeFAIeXEADHgyoqChE1ASNhISAxH0jg5gxq+\/FX1A009PTM93T8OiuX7\/q1f+\/+tevqqoCTyKRWBmNRo8Cj4GPwF++I5HII7zT8Xh8eZWTTzgcnh6Lxc5j8kFgHMgCT4G7wBPgl8j\/YBGnfT7f1LJJg8HgQrGQE3diAXVciK5DIsi3o7+devh+4Pf755dMmslkpmGih0LaiHa1hf5k6J0T\/TYrfdMHKz8pFjTr1kFWD9ltvJ8Bt\/Dt1d0rYeG4Y7ZJMbAG+A300HLKuHkw2SuxKAe8lQ3Gdjv6llLP4\/FMQfs1MMBQ2SUOyaoPihur0X4BDGEDHVGLYbwhawCG6QG6W6yu43jo+uwSt3IyWLlA2vt09+F7CwlDodAaaZ+Q\/j3inZn0GENil\/gd0Ke1rwEjgUBgDqzYIe4lBiBbkkqlZov7r2hjXtLldom\/0LVa+x7QK9+NGjHduUvkfcAdbUwb0G+XuNtg8WV6QeLXbCDeKzo9QJM2phPosEt8ExijG9nG5NuKJK6VTTeXrofudbvEh2TS49r\/eakQMeQXNV2v9Nfbzc9c8U\/GWv2LKkmYEat+r9c7Q+L9nZvOdhLBhOF86c+MWJ5JkLVIX6jUdM1Jbsgk3NU1RRBPHCzQ2crxZR0U3CBC8saKGO3NCNNGx85kpk4QPLfaXJr8jGPkKs4FfqesJv9kcP1OvFeXa70Z8Ygmz1KWTCYX4fuDqlAQhnUVIWafQfesXjjgF5zlCrGWSBQuyOm1nuEARqGTqRgxKxejrm1iYL+URKPFEktJrGSDpRJ3aYlGYRhFwjK8T+lyle+1yrUsYjMM5ZG9l0tBzk3iYvGfWE6XVWYniyvEci1RgjEpZwP6Itwi7jfppHy31Mz3HSeGNZvw8aOAUs5h0olUqqqPFVIhjlcI34wXsMMuWWhEb76ibwPw1U1ibmCzwm+tdil3HEyfhcrdBhetbrW6pHe5RNxiVeTXukTcVEyevupCjA9YEqfT6XlyGXOKuINnQ1GnEy9y6uJeBuFn3qXxxyzmnP8Amz0wy7TM4YgAAAAASUVORK5CYII=","width":19}
+%---
+%[control:dropdown:145f]
+%   data: {"defaultValue":"\"mmHg\"","itemLabels":["mmHg","atm","bar"],"items":["\"mmHg\"","\"atm\"","\"bar\""],"label":"pUnit","run":"Section"}
+%---
+%[text:image:26e9]
+%   data: {"align":"baseline","height":25,"src":"data:image\/png;base64,iVBORw0KGgoAAAANSUhEUgAAAE0AAABMCAYAAAAoVToVAAAEVElEQVR42u2c4ZG0IAyGrwRLoARLoIQtwQ7WEizBEiyBEiiBEiiBDjydifM5jiCQBPU+fuTX3e7iIyRvEuBnnuefamlWIVRoFVqFVqEx2\/f7FYtJMFGh\/QPTLPZZbFhML2YXmy\/Mwv8O8Nnmz0ODGdQvZiIAxZqB7xR\/ChrMCk0Iymfrb3xeDQ1ghZadW0zBclv9Vxv4Lrlbzgo+G1rGn1dBWx8+MLPWBxpDgBJ\/Zwy8GE3xO+zQYCb4HkAyzuou8KKGR0IDJ29KwzoZRx8IGOIx0MDfuJJ+xSNhxotA4SheINWyOA5OldRQMAaXEGW726B5gHVMUAaP2Ux50hWH5gG22kQchQ2jruuKQQMfFhrMQATMFRDEkh0aREkX4XDFC4BljTXngWKXy4CIgvZELnCCM2zQAsL1zARC721OvgeIssCMG8ihwZKZOWcZwodSWUsNTQd8wlHUNi+FpsmgQXXBm5ocwHXEKl+CWJ4L2YcKmvUAaw6+zuXMsl29TRequwWrw2hogaUhDjPC5fgyT7S82yQWmm9pjMfZQlxKutNUNjTwV+hok\/n97qLAODMLYJELrb\/44hEJTQcKlmK3fI+JuYbcd2SE1udCMxQhOuH7XWiwAEpcRHT2LOHKQc\/M0JodOBWbRUTmvxTWpEL7cEPbgWszxK69S7Nho9pI2F9Yl94E\/ipKvsD\/F89Hc6TGpe8h6iBtArq9Ua6oVGi+IKCwXZ0CFVnWYBB6MJZW3EPFrNcw0CSR75oKPrCjSPSzoRE6ezbf42uc7Pa5yZyXdjc0TvU+eAKKOZE3rtTyFATQOEs+OtBSbBN86nT8OwYaRUtOcVdcPQ0ZEeEm1C49k1TQLAG0vgC04TBrmoiAZEL1Q5TkeHggmMFfbT6rS2gSydDOAYy4NS+QHGpz9gnuYrzQkQaTRlHuz+AMCAbbCTs8t8Im7IZi2ycsIcUsalvE+CwmYZcXIV4QJOsWbNoKjFCSclxV10S\/K6mLkCSVDoYNMBPyReYXIRP8Dxc4WRLYiT\/TXI0V8n0bEU3qrLZbpK8laawI7sES5qsDsfgWHM1isj4BUe1tIJzVimtbwn6XkGCCZkpAOwkAuG0JCQGB9DRcYtqF3a5qU1YOVyT7EDVdWHWZxwVIEmgZ6Y8m0mqopm5G05luU1\/GctEFJYch9JmCFFpiNNMFBK7G+NATOUO\/UTlxmWrCCHp2fHsi9pdJ481Vzo4znQn8bodN206AJW955Uio3feB10IEgCWXkTgkQf8SYGUPlF0MZHwgsPERRxcvDqiaJyxRzxFx973zkOyFj3OcZaNIeeQoS+EcB\/8bjxyxHKeNI8roZ7qO5PhRyXKOhQdqGOWIfdUVEye+JHQAbcJesLS74GnibADdcW2OjMggttZgf3b91+FasAEgmYgNMWx3gZTyM6VO0qkSF6fccWdaTwxQbSeQ\/4ub+nZLTsUWAva3YNXrDeudkBVatQoNb78ox6WFMDJfcAAAAABJRU5ErkJggg==","width":25}
+%---
+%[output:7e9c07a8]
+%   data: {"dataType":"text","outputData":{"text":"You are running Python 3.13\nPython was already on your MATLAB path.\nYou are running compatible versions of MATLAB and Python.\n","truncated":false}}
+%---
+%[output:44d614c5]
+%   data: {"dataType":"textualVariable","outputData":{"name":"currentWeather","value":"  Python <a href=\"matlab:helpPopup('py.dict')\" style=\"font-weight:bold\">dict<\/a> with no properties.\n\n    {'temp': 274.86, 'feels_like': 270.03, 'temp_min': 273.44, 'temp_max': 276.25, 'pressure': 1003.0, 'humidity': 76.0, 'local_time': '2026-11-05 16:01:18.939737', 'current_time': 1710986897, 'wind_speed': 5.66, 'wind_deg': 280.0, 'clouds': 75.0, 'timezone': -14400, 'sunrise': 1710931672, 'sunset': 1710975450, 'city_name': 'Natick', 'weather': [{'id': 803, 'main': 'Clouds', 'description': 'broken clouds', 'icon': '04n'}]}\n"}}
+%---
+%[output:9fb457fa]
+%   data: {"dataType":"textualVariable","outputData":{"name":"ans","value":"'py.dict'"}}
+%---
+%[output:73f6ba2f]
+%   data: {"dataType":"textualVariable","outputData":{"name":"currentWeather","value":"  Python <a href=\"matlab:helpPopup('py.dict')\" style=\"font-weight:bold\">dict<\/a> with no properties.\n\n    {'temp': 274.86, 'feels_like': 270.03, 'temp_min': 273.44, 'temp_max': 276.25, 'pressure': 1003.0, 'humidity': 76.0, 'local_time': '2026-11-05 16:01:18.939737', 'current_time': 1710986897, 'wind_speed': 5.66, 'wind_deg': 280.0, 'clouds': 75.0, 'timezone': -14400, 'sunrise': 1710931672, 'sunset': 1710975450, 'city_name': 'Natick', 'weather': [{'id': 803, 'main': 'Clouds', 'description': 'broken clouds', 'icon': '04n'}]}\n"}}
+%---
+%[output:05468d24]
+%   data: {"dataType":"textualVariable","outputData":{"name":"ans","value":"  Python <a href=\"matlab:helpPopup('py.dict_keys')\" style=\"font-weight:bold\">dict_keys<\/a> with properties:\n\n    mapping: [1×1 py.mappingproxy]\n\n    dict_keys(['temp', 'feels_like', 'temp_min', 'temp_max', 'pressure', 'humidity', 'local_time', 'current_time', 'wind_speed', 'wind_deg', 'clouds', 'timezone', 'sunrise', 'sunset', 'city_name', 'weather'])\n"}}
+%---
+%[output:0e82ec8f]
+%   data: {"dataType":"textualVariable","outputData":{"name":"ans","value":"270.0300"}}
+%---
+%[output:7477cd49]
+%   data: {"dataType":"textualVariable","outputData":{"header":"struct with fields:","name":"curWeather","value":"            temp: 274.8600\n      feels_like: 270.0300\n        temp_min: 273.4400\n        temp_max: 276.2500\n        pressure: 1003\n        humidity: 76\n      local_time: [1×26 py.str]\n    current_time: [1×1 py.int]\n      wind_speed: 5.6600\n        wind_deg: 280\n          clouds: 75\n        timezone: [1×1 py.int]\n         sunrise: [1×1 py.int]\n          sunset: [1×1 py.int]\n       city_name: [1×6 py.str]\n         weather: [1×1 py.list]\n"}}
+%---
+%[output:7b68c9b8]
+%   data: {"dataType":"textualVariable","outputData":{"name":"ans","value":"'double'"}}
+%---
+%[output:10522706]
+%   data: {"dataType":"textualVariable","outputData":{"name":"ans","value":"'double'"}}
+%---
+%[output:4e38b354]
+%   data: {"dataType":"textualVariable","outputData":{"name":"ans","value":"'py.int'"}}
+%---
+%[output:647bd3c5]
+%   data: {"dataType":"textualVariable","outputData":{"name":"ans","value":"'py.int'"}}
+%---
+%[output:6de68dc5]
+%   data: {"dataType":"textualVariable","outputData":{"name":"ans","value":"'py.str'"}}
+%---
+%[output:848e4f0f]
+%   data: {"dataType":"textualVariable","outputData":{"name":"ans","value":"'py.str'"}}
+%---
+%[output:374d535b]
+%   data: {"dataType":"textualVariable","outputData":{"name":"ans","value":"\"2026-11-05 16:01:18.939737\""}}
+%---
+%[output:82357326]
+%   data: {"dataType":"textualVariable","outputData":{"header":"datetime","name":"ans","value":"   05-Nov-2026 16:01:18\n"}}
+%---
+%[output:7ab69b6f]
+%   data: {"dataType":"textualVariable","outputData":{"name":"ans","value":"  Python <a href=\"matlab:helpPopup('py.list')\" style=\"font-weight:bold\">list<\/a> with values:\n\n    [{'id': 803, 'main': 'Clouds', 'description': 'broken clouds', 'icon': '04n'}]\n\n    Use string, double or cell function to convert to a MATLAB array.\n"}}
+%---
+%[output:1627160e]
+%   data: {"dataType":"textualVariable","outputData":{"header":"struct with fields:","name":"weather","value":"             id: [1×1 py.int]\n           main: [1×6 py.str]\n    description: [1×13 py.str]\n           icon: [1×3 py.str]\n"}}
+%---
+%[output:51421d8c]
+%   data: {"dataType":"textualVariable","outputData":{"header":"struct with fields:","name":"weather","value":"             id: [1×1 py.int]\n           main: \"Clouds\"\n    description: \"broken clouds\"\n           icon: [1×3 py.str]\n"}}
+%---
+%[output:54142779]
+%   data: {"dataType":"text","outputData":{"text":"The pressure is 752.3117 mmHg.\n","truncated":false}}
+%---

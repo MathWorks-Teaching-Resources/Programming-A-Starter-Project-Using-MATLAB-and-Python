@@ -1,6 +1,0 @@
-Name,Passed,Failed,Incomplete,Duration,Details
-SmokeTests[Project=0x0_char]/SmokeRun(Scripts=CheckingTheWeather.mlx),1,0,0,8.2960691,
-SmokeTests[Project=0x0_char]/SmokeRun(Scripts=CreateCurrentWeatherApp.mlx),1,0,0,0.0004901,
-SmokeTests[Project=0x0_char]/SmokeRun(Scripts=SampleWeatherDashboard.mlx),1,0,0,0.0004588,
-SmokeTests[Project=0x0_char]/SmokeRun(Scripts=UsingMATLABwithPython.mlx),1,0,0,2.2924885,
-SmokeTests[Project=0x0_char]/SmokeRun(Scripts=WeatherForecast.mlx),1,0,0,0.3437829,

@@ -44,20 +44,16 @@ codegen/
 # Cache files
 *.slxc
 
-# Project settings
-Utilities/ProjectSettings.mat
-
 # Testing and CI related artifact
 public/
 .buildtool/
 ci_utilities/
 
-# Prevent accidentally committing your API key
+# AI Tooling
+.playwright-mcp/
+
+# Module-specific Python resources
 myAPIkey.txt
-
-# Live Task Repository
 MATLAB-Live-Task-for-Python
-
-# Ignore Python cache
 Scripts/__pycache__/
 InstructorResources/Solutions/__pycache__/
