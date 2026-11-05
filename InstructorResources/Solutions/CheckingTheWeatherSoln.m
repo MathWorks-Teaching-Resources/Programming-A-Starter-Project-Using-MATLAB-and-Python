@@ -71,14 +71,15 @@ pycode = [...
 
 else
 % Or using test output
+responseJSON = fileread(fullfile(currentProject().RootFolder,"SoftwareTests","Response.json"));
 pycode = ["import checkcurrentweather";
     "import json";
     "";
-    "json_data = json.load(open(""../../SoftwareTests/Response.json""))";
+    "json_data = json.loads(responseJSON)";
     "currentWeather = checkcurrentweather.parse_current_json(json_data)";
     ];
 apikey = "TestString";
-pyrun = @(txt,out,varargin)TestPyRun(pycode,out,varargin);
+pyrun = @(txt,out,varargin)TestPyRun(txt,out,responseJSON);
 end
 
 [currentWeather] = pyrun(pycode, [ "currentWeather" ], ... %[output:group:372ccba9] %[output:44d614c5]
@@ -203,8 +204,8 @@ disp("The pressure is " + pressure + " " + pLabel + ".") %[output:54142779]
 %%
 %[text] ## Help us Improve
 %[text] [Share your feedback](<matlab: ShareFeedback>) to help us improve this module.
-function out = TestPyRun(txt,in,varargin)
-out = pyrun(txt,in);
+function out = TestPyRun(txt,in,responseJSON)
+out = pyrun(txt,in,"responseJSON",responseJSON);
 end
 
 %[appendix]{"version":"1.0"}
